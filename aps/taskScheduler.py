@@ -70,15 +70,15 @@ def scheduleJob(data):
     job_week = r_data['job_week'] if "job_week" in r_data else "None"
     job_year = r_data['job_year'] if "job_year" in r_data else "None"
     job_dow = r_data['job_dow'] if "job_dow" in r_data else "None"
-    job_sec = int(r_data['job_seconds']) if "job_seconds" in r_data else 0
-    job_min = int(r_data['job_minutes']) if "job_minutes" in r_data else 0
-    job_hrs = int(r_data['job_hours'])if "job_hours" in r_data else 0
+    job_sec = int(r_data['job_seconds']) if "job_seconds" in r_data else "None"
+    job_min = int(r_data['job_minutes']) if "job_minutes" in r_data else "None"
+    job_hrs = int(r_data['job_hours'])if "job_hours" in r_data else "None"
 
 
     # start date
     if jobtype == 'date':
         if starttime != 'None':
-            job = scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[coid])
+            job = scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[coid], id=str(coid))
             return Response("Date job scheduled!", status=status.HTTP_201_CREATED)
         elif starttime == 'None':
             return Response("Date field can't be empty for date jobs", status=status.HTTP_400_BAD_REQUEST)
@@ -110,7 +110,7 @@ def scheduleJob(data):
                             second=job_sec,
                             start_date=starttime,
                             end_date=endtime,
-                            id=coid, args=[coid],
+                            id=str(coid), args=[coid],
                             replace_existing=True)
         return Response("Cron job scheduled!", status=status.HTTP_201_CREATED)
 
