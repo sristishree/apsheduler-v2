@@ -13,7 +13,8 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('schedule/', views.TaskAPIView.as_view(), name='create-task'),
     path('schedule/status/', views.sched_state, name='scheduler-state'),
-    path('schedule/tasks/',views.sched_list, name='scheduler-tasks' )
+    path('schedule/tasks/',views.sched_list, name='scheduler-tasks' ),
+    path('schedule/remove/', views.sched_remove, name='scheduler-remove')
 ]
 
 

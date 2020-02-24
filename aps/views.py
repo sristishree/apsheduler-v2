@@ -79,3 +79,12 @@ def sched_state(request):
             else:
                 return Response(0, status=status.HTTP_200_OK)
         
+
+@api_view(['POST'])
+def sched_remove(request):
+    r_jobid = int(request.data['job_id'])
+    try:
+        d = scheduler.remove_job(r_jobid)
+        return Response("Job Deleted", status=status.HTTP_200_OK)
+    except:
+        return Response("Job not found", status=status.HTTP_400_BAD_REQUEST)
