@@ -58,15 +58,20 @@ def scheduleJob(data):
         return ("hi")
     elif jobtype == 'interval':
         # date when it starts, interval - secs, hours,minutes,date,day,weeks,startdate,enddate
-        intv_sec = r_data['intv_seconds'] if "intv_seconds" in r_data else 0
-        intv_min = r_data['intv_minutes'] if "intv_minutes" in r_data else 0
-        intv_hrs = r_data['intv_hours'] if "intv_hours" in r_data else 0
-        intv_weeks = r_data['intv_weeks'] if "intv_weeks" in r_data else 0
+        intv_sec = int(r_data['intv_seconds']) if "intv_seconds" in r_data else 0
+        intv_min = int(r_data['intv_minutes']) if "intv_minutes" in r_data else 0
+        intv_hrs = int(r_data['intv_hours'])if "intv_hours" in r_data else 0
+        intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
         print(intv_hrs,"oooooooooo", intv_sec)
-        # job = scheduler.add_job(resultfxn, trigger='interval', seconds=intv, id=coid,args=[coid],
-        #     replace_existing=True)
+        job = scheduler.add_job(resultfxn, trigger='interval',
+                            seconds=intv_sec,
+                            minutes=intv_min,
+                            hours = intv_hrs,
+                            weeks = intv_weeks,
+                            id=coid, args=[coid],
+                            replace_existing=True)
     
-        # return "job details: %s" % job
+        return "job details: %s" % job
     if(cmd == 'shutdown'):
         scheduler.shutdown()
     elif(cmd == 'start'):
