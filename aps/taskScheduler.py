@@ -3,14 +3,32 @@ from datetime import  datetime
 from rest_framework.response import Response
 from rest_framework import status
 
-
+# DATEFORMAT - "2009-11-06 16:30:05"
+# sessionTimeout, API Versioning header based,
 # curl -d '{
-#     "coid":"320",
-#     "startime":"09-02-2019 19:40:11",
+#     "correlationID":"320",
+#     "starttime":"09-02-2019 19:40:11",
 #     "command":"get-ip",
 #     "jobtype":"interval",
 #     "intv_seconds":"20"
 # }' -H "Content-Type: application/json" -X POST http://localhost:8000/schedule/
+
+# curl -d '{
+#      "coid" : "469",
+#      "starttime" : "2020-02-24 13:20:10",
+#      "command" : "commandID",
+#      "jobtype" :
+#     }'
+
+# curl -d '{
+#     "coid":"520",
+#     "starttime":"09-02-2019 19:40:11",
+#     "command/commandId":"get-ip",
+#     "jobtype":"cron",
+#     "job_seconds":"20"
+# }' -H "Content-Type: application/json" -X POST http://localhost:8000/schedule/
+
+
 # '{
 #     "coid":"320",
 #     "startime":"09-02-2019 19:40:11",
@@ -21,12 +39,22 @@ from rest_framework import status
 #                 "hours":"22"
 #                 }"
 # }'
+# curl -d '{"job_id":"210"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/remove/
+# curl -d '{"status":"state"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status/
+# curl -d '{"status":"start"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status/
+# curl  -H "Content-Type: application/json" -X GET localhost:8000/schedule/tasks/
+
 
 
 
 
 def sendRequest(coid):
-    print(coid)
+    # headers = {'Content-Type': 'application/json'}
+    # data = {
+    #     "correlationID" : coid,
+    # }
+    # url = 'localhost:8000/' 
+    print(coid,"sendRequest()")
 
 
 def dateformatter(cur_date):
@@ -52,10 +80,10 @@ def scheduleJob(data):
     print("=========",data.data)
     r_data = data.data
     coid = r_data['coid'] if "coid" in r_data else 0
-    starttime = r_data['starttime'] if "starttime" in r_data else "None"
-    endtime = r_data['endtime'] if "endtime" in r_data else "None"
-    cmd = r_data['command'] if "command" in r_data else "None"
-    jobtype = r_data['jobtype'] if "jobtype" in r_data else "None"
+    starttime = r_data['starttime'] if "starttime" in r_data else None
+    endtime = r_data['endtime'] if "endtime" in r_data else None
+    cmd = r_data['command'] if "command" in r_data else None
+    jobtype = r_data['jobtype'] if "jobtype" in r_data else None
     
     ## INTERVAL JOB VARIABLES 
     intv_sec = int(r_data['intv_seconds']) if "intv_seconds" in r_data else 0
@@ -65,14 +93,15 @@ def scheduleJob(data):
 
     
     ## CRONJOB VARIABLES
-    job_month = r_data['job_month'] if "job_month" in r_data else "None"
-    job_day = r_data['job_day'] if "job_day" in r_data else "None"
-    job_week = r_data['job_week'] if "job_week" in r_data else "None"
-    job_year = r_data['job_year'] if "job_year" in r_data else "None"
-    job_dow = r_data['job_dow'] if "job_dow" in r_data else "None"
-    job_sec = int(r_data['job_seconds']) if "job_seconds" in r_data else "None"
-    job_min = int(r_data['job_minutes']) if "job_minutes" in r_data else "None"
-    job_hrs = int(r_data['job_hours'])if "job_hours" in r_data else "None"
+    job_month = r_data['job_month'] if "job_month" in r_data else None
+    job_day = r_data['job_day'] if "job_day" in r_data else None
+    job_week = r_data['job_week'] if "job_week" in r_data else None
+    job_year = r_data['job_year'] if "job_year" in r_data else None
+    job_dow = r_data['job_dow'] if "job_dow" in r_data else None
+    job_sec = int(r_data['job_seconds']) if "job_seconds" in r_data else None
+    job_min = int(r_data['job_minutes']) if "job_minutes" in r_data else None
+    job_hrs = int(r_data['job_hours'])if "job_hours" in r_data else None
+    enddate = r_data['enddate'] if "enddate" in r_data else None
 
 
     # start date
@@ -109,7 +138,7 @@ def scheduleJob(data):
                             minute=job_min,
                             second=job_sec,
                             start_date=starttime,
-                            end_date=endtime,
+                            end_date=enddate,
                             id=str(coid), args=[coid],
                             replace_existing=True)
         return Response("Cron job scheduled!", status=status.HTTP_201_CREATED)

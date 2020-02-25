@@ -30,9 +30,9 @@ class TaskAPIView(APIView):
 def sched_list(request):
  schedules = []
  scl = scheduler.get_jobs()
- xt = repr(scl[0].trigger)
- jt = scl[0].trigger
- print("XXXXXXXXXXXXXX",jt.start_date)
+#  xt = repr(scl[0].trigger)
+#  jt = scl[0].trigger
+#  print("XXXXXXXXXXXXXX",jt.start_date)
  for job in scl:
      jobdict = {}
     #  jt = type(job.trigger)
