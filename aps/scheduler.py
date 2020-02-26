@@ -6,15 +6,16 @@ from django_apscheduler.jobstores import  DjangoJobStore,register_events, regist
 
 from django.conf import settings
 
-# Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG
+# Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
 scheduler = BackgroundScheduler()
 scheduler.add_jobstore(DjangoJobStore(), "default")
 
 def start():
-    if settings.DEBUG:
-      	# Hook into the apscheduler logger
-        logging.basicConfig()
-        logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+    # Uncomment if statement to enable Debugging
+    # if settings.DEBUG:
+    #   	# Hook into the apscheduler logger
+    #     logging.basicConfig()
+    #     logging.getLogger('apscheduler').setLevel(logging.DEBUG)
 
     # Adding this job here instead of to crons.
     # This will do the following:
