@@ -10,7 +10,7 @@ from django.conf import settings
 scheduler = BackgroundScheduler()
 scheduler.add_jobstore(DjangoJobStore(), "default")
 
-def start():
+def start_sched():
     # Uncomment if statement to enable Debugging
     # if settings.DEBUG:
     #   	# Hook into the apscheduler logger
@@ -32,3 +32,19 @@ def start():
 def listjobs():
     scl = scheduler.get_jobs()
     return (scl)
+
+def state():
+    return scheduler.state
+
+def shutdown():
+    scheduler.shutdown()
+
+def job_exists(job_id):
+    job = scheduler.get_job(job_id)
+    if job == None:
+        return False
+    else:
+        return True
+    
+def remove_job(job_id):
+    scheduler.remove_job(job_id)
