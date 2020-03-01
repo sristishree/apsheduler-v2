@@ -63,7 +63,12 @@ def remove_job(job_id):
 
 
 def sendRequest(diagID):
-    print(diagID, "Reached sendReq()")
+    
+    b = tasks.objects.get(pk=int(diagID))
+    lookupId = b.lookup_id
+    jobRuns = b.job_runs
+
+    print(diagID, "Reached sendReq()", lookupId, jobRuns)
 
 def add_DateJob(starttime,diagID):
     scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID], id=str(diagID), replace_existing=True)
@@ -98,14 +103,12 @@ def schedule_listener(event):
     
     try:
         a = tasks.objects.get(pk=int(event.job_id))
-        print("INSICDE TRY", a.job_runs)
-
-        a.job_runs += 1
+        
+        a.job_runs = F('job_runs')+ 1
 
         if event.exception:
             print('Job crashed')
         else: 
-            print("INSICDE TRY - ELSE", a.job_runs)
             a.job_success = F('job_success')+1
             # job = scheduler.get_job(event.job_id)
             print('Job created', event.job_id)
