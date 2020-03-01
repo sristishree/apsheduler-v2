@@ -3,6 +3,9 @@ import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from django_apscheduler.jobstores import  DjangoJobStore,register_events, register_job
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
+from .models import tasks
+from django.db.models import F
 
 from django.conf import settings
 
@@ -38,7 +41,7 @@ def listjobs():
 def state():
     return scheduler.state
 
-def shutdown():
+def shutdown_sched():
     scheduler.shutdown()
 
 def job_exists(job_id):
@@ -72,7 +75,7 @@ def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID)
                                     hours = int(intv_hrs),
                                     weeks = intv_weeks,
                                     start_date=starttime,
-                                    id=str(diagID), args=[diagID],
+                                    id=str(diagID), args=[diagID],jitter=30,
                                     replace_existing=True)
 
 def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,enddate,diagID):
@@ -87,15 +90,30 @@ def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job
                                         second=job_sec,
                                         start_date=starttime,
                                         end_date=enddate,
-                                        id=str(diagID), args=[diagID],
+                                        id=str(diagID), args=[diagID],jitter=30,
                                         replace_existing=True)
 
 
 def schedule_listener(event):
-    # if event.exception:
-    #     print('Job crashed')
-    # else:
-    #     print('Job created')
+    
+    try:
+        a = tasks.objects.get(pk=int(event.job_id))
+        print("INSICDE TRY", a.job_runs)
+
+        a.job_runs += 1
+
+        if event.exception:
+            print('Job crashed')
+        else: 
+            print("INSICDE TRY - ELSE", a.job_runs)
+            a.job_success = F('job_success')+1
+            # job = scheduler.get_job(event.job_id)
+            print('Job created', event.job_id)
+
+        a.save()
+    except:
+        pass
+
     print("EVENT=====>",event)
 
-scheduler.add_listener(schedule_listener)
+scheduler.add_listener(schedule_listener,EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)

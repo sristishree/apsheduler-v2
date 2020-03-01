@@ -19,8 +19,14 @@ class TaskAPIView(APIView):
     def post(self, request, format=None):
         serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
-            resp_obj, resp_status = taskScheduler.scheduleJob(request)
-            # serializer.save()
+            resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(request)
+            if resp_success:
+                # a = tasks.objects.get(pk=int(request.data['diagID']))
+                # a.job_runs = F('job_runs') + 1
+                # print(serializer.data['diagID'])
+                # query = tasks.objects.
+                
+                serializer.save()
             return Response(resp_obj, status=resp_status)
         else:
             print(serializer.is_valid())
