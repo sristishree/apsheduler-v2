@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
 from . import views
-from . import scheduler
+from . import scheduler_helper
 
 router = routers.DefaultRouter()
 router.register(r'tasks', views.TaskViewSet)
