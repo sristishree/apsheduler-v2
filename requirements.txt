@@ -7,5 +7,3 @@ pytz==2019.3
 requests==2.23.0
 tzlocal==2.0.0
 urllib3==1.25.8
-
-
