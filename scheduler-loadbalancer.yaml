@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler-deployment
+spec:
+  selector:
+    matchLabels:
+      app: sched
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sched
+    spec:
+      containers:
+      - name: sched
+        image: sristi/scheduler-image:v2
+        ports:
+        - containerPort: 8002
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler-svc
+spec:
+  selector:
+    app: sched
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8002
+  type: LoadBalancer
