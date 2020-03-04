@@ -5,4 +5,4 @@ from .models import tasks
 class TaskSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tasks
-        fields = ('coid', 'command','starttime')
+        fields = ('diagID','starttime', 'jobtype')

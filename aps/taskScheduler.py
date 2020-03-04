@@ -34,11 +34,11 @@ import re
 #     }'
 
 # curl -d '{
-#     "coid":"7890",
+#     "coid":"140",
 #     "starttime":"2020-02-20 13:20:10",
 #     "command":"get-ip",
 #     "jobtype":"interval",
-#     "intv_time":"00:01:15",
+#     "intv_time":"00:00:20"
 # }' -H "Content-Type: application/json" -X POST http://localhost:8001/schedule/
 
 
@@ -52,34 +52,35 @@ import re
 #                 "hours":"22"
 #                 }"
 # }'
-# curl -d '{"job_id":"210"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/remove/
+# curl -d '{"job_id":"210"}' -H "Content-Type: application/json" -X POST localhost:8001/schedule/remove/
 # curl -d '{"status":"state"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status/
-# curl -d '{"status":"start"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status/
-# curl  -H "Content-Type: application/json" -X GET localhost:8000/schedule/tasks/
+# curl -d '{"status":"start"}' -H "Content-Type: application/json" -X POST localhost:8001/schedule/status/
+# curl  -H "Content-Type: application/json" -X GET localhost:8001/schedule/tasks/
 
 
 
 
 
-def sendRequest(coid):
+def sendRequest(diagID):
     # headers = {'Content-Type': 'application/json'}
-    # data = {
-    #     "correlationID" : coid,
+    # params = { 
+    #     "diagID" : diagID,
     # }
     # url = 'localhost:8000/' 
+    # res = requests.get(url,  headers=headers, params=params)
     currentDT = datetime.datetime.now()
-    print(coid,"sendRequest()",currentDT.strftime("%Y-%m-%d %H:%M:%S") )
+    print(diagID,"sendRequest()",currentDT.strftime("%Y-%m-%d %H:%M:%S") )
 
 
 def dateformatter(cur_date):
     date_time = {
-    "day": "",
-    "date": "",
-    "month": "",
-    "year": "",
-    "hour": "",
-    "minutes": "",
-    "seconds": ""
+        "day": "",
+        "date": "",
+        "month": "",
+        "year": "",
+        "hour": "",
+        "minutes": "",
+        "seconds": ""
     }
     dt_obj = datetime.strptime(cur_date, "%Y-%m-%d %H:%M:%S")
     date_time["date"] = dt_obj.strftime('%d')
@@ -100,9 +101,9 @@ def timeformatter(cur_time):
         return(None,None,None)
 
 def scheduleJob(data):
-    print("=========",data.data)
+    print("Added request to scheduler ",data.data)
     r_data = data.data
-    coid = r_data['coid'] if "coid" in r_data else 0
+    diagID = r_data['diagID'] if "diagID" in r_data else 0
     starttime = r_data['starttime'] if "starttime" in r_data else None
     endtime = r_data['endtime'] if "endtime" in r_data else None
     cmd = r_data['command'] if "command" in r_data else None
@@ -134,54 +135,65 @@ def scheduleJob(data):
 
 
     # start date
-    if jobtype == 'date':
-        if starttime != 'None':
-            job = scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[coid], id=str(coid))
-            return Response("Date job scheduled!", status=status.HTTP_201_CREATED)
-        elif starttime == 'None':
-            return Response("Date field can't be empty for date jobs", status=status.HTTP_400_BAD_REQUEST)
+    if diagID == 0 :
+        return ("Diagnostic ID is required", status.HTTP_400_BAD_REQUEST)
+    else:
+        if jobtype == 'date':
+            if starttime != None:
+                if scheduler.get_job(str(diagID)) == None:
+                    job = scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID], id=str(diagID))
+                    return ("Date job scheduled!", status.HTTP_201_CREATED)
+                elif scheduler.get_job(str(diagID)) != None:
+                    return ("Job with Diagnostic ID already exists", status.HTTP_400_BAD_REQUEST )
+            elif starttime == None:
+                return ("Date field can't be empty for date jobs", status.HTTP_400_BAD_REQUEST)
 
-    elif jobtype == 'interval':
-        # date when it starts, interval - secs, hours,minutes,date,day,weeks,startdate,enddate
-        
-        if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
-            job = scheduler.add_job(sendRequest, trigger='interval',
-                                seconds=int(intv_sec),
-                                minutes=int(intv_min),
-                                hours = int(intv_hrs),
-                                weeks = intv_weeks,
-                                start_date=starttime,
-                                id=str(coid), args=[coid],
-                                replace_existing=True)
+        elif jobtype == 'interval':
+            # date when it starts, interval - secs, hours,minutes,date,day,weeks,startdate,enddate
             
-            return Response("Interval job scheduled!", status=status.HTTP_201_CREATED)
-        elif starttime == None:
-            return Response("Startdate is required for scheduling!", status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response("Error in scheduling job", status=status.HTTP_400_BAD_REQUEST)
+            if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
+                if scheduler.get_job(str(diagID)) == None:
+                    job = scheduler.add_job(sendRequest, trigger='interval',
+                                        seconds=int(intv_sec),
+                                        minutes=int(intv_min),
+                                        hours = int(intv_hrs),
+                                        weeks = intv_weeks,
+                                        start_date=starttime,
+                                        id=str(diagID), args=[diagID],
+                                        replace_existing=True)
+                    
+                    return ("Interval job scheduled!", status.HTTP_201_CREATED)
+                elif scheduler.get_job(str(diagID)) != None:
+                    return ("Job with diagnostic ID already exists", status.HTTP_400_BAD_REQUEST)
+            elif starttime == None:
+                return ("Startdate is required for scheduling!", status.HTTP_400_BAD_REQUEST)
+            else:
+                return ("Error in scheduling job", status.HTTP_400_BAD_REQUEST)
 
+            # return "job details: %s" % job
 
-        # return "job details: %s" % job
-    elif jobtype == 'cron':
-        # hour,min,sec -> int // year,month,day,week,dayofweek
-        if starttime != None:
-            job = scheduler.add_job(sendRequest, trigger='cron',
-                                year=job_year,
-                                month=job_month, 
-                                day=job_day, 
-                                week=job_week,
-                                day_of_week=job_dow,
-                                hour=job_hrs,
-                                minute=job_min,
-                                second=job_sec,
-                                start_date=starttime,
-                                end_date=enddate,
-                                id=str(coid), args=[coid],
-                                replace_existing=True)
-            return Response("Cron job scheduled!", status=status.HTTP_201_CREATED)
-
-        elif starttime == None:
-            return Response("Specify a startdate", status=status.HTTP_400_BAD_REQUEST)
+        elif jobtype == 'cron':
+            # hour,min,sec -> int // year,month,day,week,dayofweek
+            if starttime != None:
+                if scheduler.get_job(str(diagID)) == None:
+                    job = scheduler.add_job(sendRequest, trigger='cron',
+                                        year=job_year,
+                                        month=job_month, 
+                                        day=job_day, 
+                                        week=job_week,
+                                        day_of_week=job_dow,
+                                        hour=job_hrs,
+                                        minute=job_min,
+                                        second=job_sec,
+                                        start_date=starttime,
+                                        end_date=enddate,
+                                        id=str(diagID), args=[diagID],
+                                        replace_existing=True)
+                    return ("Cron job scheduled!", status.HTTP_201_CREATED)
+                elif scheduler.get_job(str(diagID)) != None:
+                    return ("Job with diagnostic ID already exists", status.HTTP_400_BAD_REQUEST)
+            elif starttime == None:
+                return ("Specify a startdate", status.HTTP_400_BAD_REQUEST)
 
 
    
