@@ -54,7 +54,7 @@ import re
 #                 "hours":"22"
 #                 }"
 # }'
-# curl -d '{"diagnosticsid":"210"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/remove/
+# curl -d '{"diagnosticsid":"1"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/remove/
 # curl -d '{"status":"state"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status/
 # curl -d '{"status":"start"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status/
 # curl  -H "Content-Type: application/json" -X GET localhost:8000/schedule/tasks/

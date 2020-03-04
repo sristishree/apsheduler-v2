@@ -3,8 +3,8 @@ from django.db import models
 
 # Create your models here.
 class tasks(models.Model):
-    diagnosticsid = models.CharField(default=uuid.uuid4,max_length=100,primary_key=True)
-    correlationID = models.CharField(default=uuid.uuid4,max_length=100)
+    diagnosticsid = models.CharField(max_length=100,primary_key=True)
+    correlationID = models.CharField(max_length=100)
     starttime = models.CharField(max_length=100)
     jobtype = models.CharField(max_length=30)
     lookup_id = models.UUIDField(default=uuid.uuid4, editable=False)

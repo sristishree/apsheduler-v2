@@ -119,7 +119,7 @@ def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job
 
 
 def update_DateJob(starttime, diagID, correlationID):
-    scheduler.reschedule_job(sendRequest,trigger='date',job_id=str(diagID),args=[diagID,correlationid],run_date=starttime)
+    scheduler.reschedule_job(trigger='date',job_id=str(diagID),run_date=starttime)
 
 def update_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID):
     scheduler.reschedule_job(trigger='interval',

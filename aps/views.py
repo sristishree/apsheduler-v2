@@ -10,6 +10,10 @@ from .models import tasks
 from . import taskScheduler
 from . import scheduler_helper
 from django.http import HttpResponse
+
+from threading import Thread
+
+
 # Create your views here.
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -17,8 +21,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
 class TaskAPIView(APIView):
-    def post(self, request, format=None):
-        
+
+    def schedulerPost(self,request,format=None):
         serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
             resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(request)
@@ -36,25 +40,67 @@ class TaskAPIView(APIView):
             return HttpResponse({'error':serializer.errors,'status':status.HTTP_400_BAD_REQUEST})
             #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def post(self, request, format=None):
+        t = Thread(target = self.schedulerPost, args = [request])
+        t.daemon = True
+        t.start()
+        t.join()
+        return HttpResponse({"success": "Data sent to compiler", "status": status.HTTP_202_ACCEPTED})
+    
+    '''
     def put(self, request, pk=None, format=None):
         pk = request.data['diagnosticsid']
         pk = str(pk)
-        pk = (pk,None)
-        try:
-            user = tasks.objects.get(pk=pk)
-        except:
-            return HttpResponse({'error':"PK not present"})
-            #return HttpResponse("PK not present")
-        serializer = TaskSerializer(user, data = request.data)
+        if scheduler_helper.job_exists(pk):
+            try:
+                user = tasks.objects.get(pk=pk)
+            except:
+                return HttpResponse({'error':"PK not present"})
+                #return HttpResponse("PK not present")
+            serializer = TaskSerializer(user, data = request.data)
+            if serializer.is_valid():
+                resp_success, resp_obj, resp_status = taskScheduler.updateJob(request)
+                serializer.save()
+                return HttpResponse({'resp_obj': resp_obj, 'status':resp_status})
+                #return HttpResponse(resp_obj, status=resp_status)
+            else:
+                print(serializer.is_valid())
+                return HttpResponse({'error':serializer.errors,'status':status.HTTP_400_BAD_REQUEST})
+                #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return HttpResponse({'resp_obj':"Job not found", 'status':status.HTTP_400_BAD_REQUEST})
+    '''
+    def put(self, request, pk=None, format=None):
+        r_jobid = str(request.data['diagnosticsid'])
+        if scheduler_helper.job_exists(r_jobid):
+            try:
+                a = tasks.objects.get(pk=request.data['diagnosticsid'])
+                scheduler_helper.remove_job(r_jobid)
+                a.delete()
+            except:
+                print("error:PK not present")
+        else:
+            print("resp_obj:Job not found", "status:status.HTTP_400_BAD_REQUEST")
+
+
+
+        serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
-            resp_success, resp_obj, resp_status = taskScheduler.updateJob(request)
-            serializer.save()
+            resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(request)
+            print (resp_success,resp_obj)
+            if resp_success:
+                # a = tasks.objects.get(pk=int(request.data['diagID']))
+                # a.job_runs = F('job_runs') + 1
+                # print(serializer.data['diagID'])
+                # query = tasks.objects.
+                serializer.save()
             return HttpResponse({'resp_obj': resp_obj, 'status':resp_status})
             #return HttpResponse(resp_obj, status=resp_status)
         else:
             print(serializer.is_valid())
             return HttpResponse({'error':serializer.errors,'status':status.HTTP_400_BAD_REQUEST})
             #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
 
 
@@ -121,9 +167,12 @@ def sched_state(request):
 def sched_remove(request):
     r_jobid = str(request.data['diagnosticsid'])
     if scheduler_helper.job_exists(r_jobid):
-        scheduler_helper.remove_job(r_jobid)
-        a = tasks.objects.get(pk=request.data['diagnosticsid'])
-        a.delete()
-        return HttpResponse({'resp_obj':"Job Deleted", 'status':status.HTTP_200_OK})
+        try:
+            a = tasks.objects.get(pk=str(request.data['diagnosticsid']))
+            scheduler_helper.remove_job(r_jobid)
+            a.delete()
+            return HttpResponse({'resp_obj':"Job Deleted", 'status':status.HTTP_200_OK})
+        except:
+            return HttpResponse({'error':"PK not present"})
     else:
         return HttpResponse({'resp_obj':"Job not found", 'status':status.HTTP_400_BAD_REQUEST})
