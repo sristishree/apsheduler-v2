@@ -1,6 +1,5 @@
-import uuid
 from django.db import models
-
+import uuid
 # Create your models here.
 class tasks(models.Model):
     diagnosticsid = models.CharField(max_length=100,primary_key=True)

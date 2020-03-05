@@ -8,7 +8,7 @@ from .models import tasks
 from django.db.models import F
 import requests
 from django.conf import settings
-
+from .diagnosticPack import diagnosticPack
 # Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
 scheduler = BackgroundScheduler()
 scheduler.add_jobstore(DjangoJobStore(), "default")
@@ -62,11 +62,13 @@ def remove_job(job_id):
     scheduler.remove_job(job_id)
 
 def sendRequest(diagID, correlationID):
-    
+    fetchRequest = diagnosticPack()
+    command = fetchRequest.read(diagID)
+    command = command['command']
     headers = {'Content-Type': 'application/json'}
     data = {
-        #"command":"[{"moduleId":"","input":{"Command":"command"}}]",
-        "correlationID": correlationID,
+        "command": command,
+        "correlationID": '',
         "diagnosticsid": diagID
     }
     '''

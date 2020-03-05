@@ -14,15 +14,11 @@ import os
 from pymongo import MongoClient
 import redis
 global r
-r = redis.Redis(host="redis-master.development.svc.cluster.local",
-port=6379,
-password='4xbabaQqNB')
+r = redis.Redis(host="redis-master.development.svc.cluster.local",port=6379,password='4xbabaQqNB')
 
 global client
 
 client = MongoClient('mongodb://root:K8EQhNuwF8DqX9tG@mongo-mongodb.development.svc.cluster.local:27017/')
-
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

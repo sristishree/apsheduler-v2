@@ -5,14 +5,14 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.views import APIView
 from .serializer import TaskSerializer
+from .diagnosticPack import diagnosticPack
 from .models import tasks
 #from .taskScheduler import *
 from . import taskScheduler
 from . import scheduler_helper
 from django.http import HttpResponse
-
 from threading import Thread
-
+from .createData import createData
 
 # Create your views here.
 
@@ -22,8 +22,9 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 class TaskAPIView(APIView):
 
-    def schedulerPost(self,request,format=None):
-        serializer = TaskSerializer(data=request.data)
+    def schedulerPost(self,data,format=None):
+
+        serializer = TaskSerializer(data=data)
         if serializer.is_valid():
             resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(request)
             print (resp_success,resp_obj)
@@ -41,7 +42,7 @@ class TaskAPIView(APIView):
             #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, format=None):
-        t = Thread(target = self.schedulerPost, args = [request])
+        t = Thread(target = self.schedulerPost, args = [request.data])
         t.daemon = True
         t.start()
         t.join()
@@ -82,26 +83,13 @@ class TaskAPIView(APIView):
         else:
             print("resp_obj:Job not found", "status:status.HTTP_400_BAD_REQUEST")
 
-
-
-        serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(request)
-            print (resp_success,resp_obj)
-            if resp_success:
-                # a = tasks.objects.get(pk=int(request.data['diagID']))
-                # a.job_runs = F('job_runs') + 1
-                # print(serializer.data['diagID'])
-                # query = tasks.objects.
-                serializer.save()
-            return HttpResponse({'resp_obj': resp_obj, 'status':resp_status})
-            #return HttpResponse(resp_obj, status=resp_status)
-        else:
-            print(serializer.is_valid())
-            return HttpResponse({'error':serializer.errors,'status':status.HTTP_400_BAD_REQUEST})
-            #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        t = Thread(target = self.schedulerPost, args = [request.data])
+        t.daemon = True
+        t.start()
+        t.join()
 
+        
 
 
 @api_view(['GET'])
@@ -176,3 +164,20 @@ def sched_remove(request):
             return HttpResponse({'error':"PK not present"})
     else:
         return HttpResponse({'resp_obj':"Job not found", 'status':status.HTTP_400_BAD_REQUEST})
+
+@api_view(['POST'])
+def write_data(request):
+    data = createData()
+    data.write()
+    return HttpResponse('OK')
+
+@api_view(['POST'])
+def fetch(request):
+    fetchRequest = diagnosticPack()
+    diagID = str(request.data['diagnosticsid'])
+    command = fetchRequest.read(diagID)
+    if command == None:
+        return HttpResponse({'resp_obj': 'Diagnostic Pack not found', 'status': status.HTTP_400_BAD_RQUEST})
+    else:
+        return HttpResponse({'resp_obj': command,'status': status.HTTP_200_OK})
+    

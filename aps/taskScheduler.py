@@ -18,12 +18,12 @@ import re
 # sessionTimeout, API Versioning header based,
 
 '''curl -d '{
-     "correlationID":"1055",
+     "correlationID":"1055",python
      "diagnosticsid":"1055",
      "starttime":"2020-03-02 19:40:10",
      "endtime" : "2020-10-02 20:18:10",
      "jobtype":"interval",
-     "intv_time":"00:00:5"
+     "intv_time":"00:20:15"
  }' -H "Content-Type: application/json" -X POST http://localhost:8000/schedule/'''
 
 '''curl -d '{
@@ -54,11 +54,11 @@ import re
 #                 "hours":"22"
 #                 }"
 # }'
-# curl -d '{"diagnosticsid":"1"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/remove/
-# curl -d '{"status":"state"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status/
-# curl -d '{"status":"start"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status/
-# curl  -H "Content-Type: application/json" -X GET localhost:8000/schedule/tasks/
-
+# curl -d '{"diagnosticsid":"1"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/remove
+# curl -d '{"status":"state"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status
+# curl -d '{"status":"start"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status
+# curl  -H "Content-Type: application/json" -X GET localhost:8000/schedule/tasks
+# curl -d '{"diagnosticsid":"1"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/fetch
 
 
 

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: sched
-        image: sristi/scheduler-image:v2
+        image: sristi/scheduler-image:v3
         ports:
         - containerPort: 8002
         imagePullPolicy: Always
