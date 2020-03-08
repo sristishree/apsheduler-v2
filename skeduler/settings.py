@@ -11,6 +11,19 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from pymongo import MongoClient
+import redis
+global r
+# r = redis.Redis(host="redis-master.development.svc.cluster.local",port=6379,password='4xbabaQqNB')
+
+global client, schedClient
+
+# client = MongoClient('mongodb://root:K8EQhNuwF8DqX9tG@mongo-mongodb.development.svc.cluster.local:27017/')
+client = MongoClient('mongodb://root2:rootpass2@127.0.0.1:27018/?authSource=admin&authMechanism=SCRAM-SHA-1')
+schedClient = MongoClient('mongodb://root:rootpass@127.0.0.1:27017/?authSource=admin&authMechanism=SCRAM-SHA-1')
+
+
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +38,7 @@ SECRET_KEY = 'oy)8b*)op*m&$%$_($bt0zolt9f2sj@biy5l2t0$r3wdex3i63'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['20.44.34.129','mlapi2-svc','20.44.32.188','scheduler-svc','52.140.9.34','52.140.9.34:8002','localhost']
 
 
 # Application definition

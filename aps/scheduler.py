@@ -41,6 +41,7 @@ def shutdown():
 
 def job_exists(job_id):
     job = scheduler.get_job(job_id)
+    print('job_Exists')
     if job == None:
         return False
     else:

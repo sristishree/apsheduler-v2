@@ -12,12 +12,14 @@ urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('schedule/', views.TaskAPIView.as_view(), name='create-task'),
-    path('schedule/status/', views.sched_state, name='scheduler-state'),
-    path('schedule/tasks/',views.sched_list, name='scheduler-tasks' ),
-    path('schedule/remove/', views.sched_remove, name='scheduler-remove')
+    path('schedule/status', views.sched_state, name='scheduler-state'),
+    path('schedule/tasks',views.sched_list, name='scheduler-tasks' ),
+    path('schedule/remove', views.sched_remove, name='scheduler-remove')
+    # path('schedule/fetch', views.fetch, name='fetch'),
+    # path('schedule/write', views.write_data, name='write')
 ]
 
 
-# scheduler.start()
+scheduler_helper.start_sched()
 # import logging
 # logging.basicConfig(level="DEBUG")
