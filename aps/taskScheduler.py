@@ -97,8 +97,8 @@ def timeformatter(cur_time):
         return(None,None,None)
 
 def scheduleJob(data):
-    print("Processing request to scheduler ",data.data)
-    r_data = data.data
+    print("Processing request to scheduler ",data)
+    r_data = data
     diagnosticsID = r_data['diagnosticsid'] if "diagnosticsid" in r_data else 0
     correlationID = r_data.get('correlationID')
     starttime = r_data['starttime'] if "starttime" in r_data else None
@@ -190,10 +190,10 @@ def scheduleJob(data):
             elif starttime == None:
                 return (False,"Specify a startdate", status.HTTP_400_BAD_REQUEST)
 
-
+'''
 def updateJob(data):
-    print("Processing request to scheduler ",data.data)
-    r_data = data.data
+    print("Processing request to scheduler ",data)
+    r_data = data
     diagnosticsID = r_data['diagnosticsid'] if "diagnosticsid" in r_data else 0
     correlationID = r_data.get('correlationID')
     starttime = r_data['starttime'] if "starttime" in r_data else None
@@ -283,6 +283,6 @@ def updateJob(data):
                     return (False,"Job with diagnostic ID does not exist", status.HTTP_400_BAD_REQUEST)
             elif starttime == None:
                 return (False,"Specify a startdate", status.HTTP_400_BAD_REQUEST)
-
+'''
 
  
