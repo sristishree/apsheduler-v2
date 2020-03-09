@@ -1,0 +1,42 @@
+version: "3.7"
+
+services:
+
+  mongodb_master:
+    restart: always
+    image: mongo:4.2.2
+    container_name: mongodb2
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpass
+      # - MONGO_INITDB_DATABASE=zeusscheduler
+    #   - MONGO_INITDB_DATABASE=zeusscheduler
+    #   - MONGODB_USERNAME=admin
+    #   - MONGODB_PASSWORD=microland
+    #   - MONGODB_DATABASE=zeusscheduler
+    volumes:
+      # - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./data/db:/var/micro-data/mongodb/data/db
+    ports:
+      - 27017:27017
+    # command: mongod --smallfiles --logpath=/dev/null # --quiet
+
+  mongodb_mistress:
+    restart: always
+    image: mongo:4.2.2
+    container_name: mongodb3
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root2
+      - MONGO_INITDB_ROOT_PASSWORD=rootpass2
+        # - MONGO_INITDB_DATABASE=zeusscheduler
+      #   - MONGO_INITDB_DATABASE=zeusscheduler
+      #   - MONGODB_USERNAME=admin
+      #   - MONGODB_PASSWORD=microland
+      #   - MONGODB_DATABASE=zeusscheduler
+    volumes:
+        # - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./data/db2:/var/micro-data/mongodb/data/db
+    ports:
+      - 27018:27017
+      # command: mongod --smallfiles --logpath=/dev/null # --quiet
+

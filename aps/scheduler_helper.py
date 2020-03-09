@@ -1,16 +1,17 @@
 import logging
-
+import random
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from django_apscheduler.jobstores import  DjangoJobStore,register_events, register_job
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
 from .models import tasks
 from django.db.models import F
-
+import requests
+import pytz
 from django.conf import settings
-
+from .diagnosticPack import diagnosticPack
 # Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(timezone = pytz.timezone('Asia/Calcutta'))
 scheduler.add_jobstore(DjangoJobStore(), "default")
 
 
@@ -61,7 +62,28 @@ def get_job(job_id):
 def remove_job(job_id):
     scheduler.remove_job(job_id)
 
-
+def sendRequest(diagID, correlationID):
+    # fetchRequest = diagnosticPack()
+    # command = fetchRequest.read(diagID)
+    # command = command['command']
+    headers = {'Content-Type': 'application/json'}
+    data = {
+        # "command": command,
+        "correlationID": '',
+        "diagnosticsid": diagID
+    }
+    '''
+    data = { 
+        "diagnosticsid" : diagID,
+        "diagnostic_flag" : "True",
+        "state_id": random.randint(1,10000)
+        #"counter_": "int" Incremental
+    }'''
+    # url = 'http://mlapi2-svc/compiler?caller=scheduler'
+    # res = requests.post(url, headers=headers, data=data)
+    #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
+    print("Event fired", data)
+'''
 def sendRequest(diagID):
     
     b = tasks.objects.get(pk=int(diagID))
@@ -69,21 +91,23 @@ def sendRequest(diagID):
     jobRuns = b.job_runs
 
     print(diagID, "Reached sendReq()", lookupId, jobRuns)
+'''
 
-def add_DateJob(starttime,diagID):
-    scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID], id=str(diagID), replace_existing=True)
 
-def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID):
+def add_DateJob(starttime,diagID,correlationid):
+    scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID,correlationid], id=str(diagID), replace_existing=True)
+
+def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID, correlationid):
     scheduler.add_job(sendRequest,  trigger='interval',
                                     seconds=int(intv_sec),
                                     minutes=int(intv_min),
                                     hours = int(intv_hrs),
                                     weeks = intv_weeks,
                                     start_date=starttime,
-                                    id=str(diagID), args=[diagID],jitter=30,
+                                    id=str(diagID), args=[diagID,correlationid],jitter=30,
                                     replace_existing=True)
 
-def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,enddate,diagID):
+def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,enddate,diagID,correlationid):
      scheduler.add_job(sendRequest, trigger='cron',
                                         year=job_year,
                                         month=job_month, 
@@ -95,8 +119,35 @@ def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job
                                         second=job_sec,
                                         start_date=starttime,
                                         end_date=enddate,
-                                        id=str(diagID), args=[diagID],jitter=30,
+                                        id=str(diagID), args=[diagID,correlationid],jitter=30,
                                         replace_existing=True)
+
+
+def update_DateJob(starttime, diagID, correlationID):
+    scheduler.reschedule_job(trigger='date',job_id=str(diagID),run_date=starttime)
+
+def update_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID):
+    scheduler.reschedule_job(trigger='interval',
+                            seconds=int(intv_sec),
+                            minutes=int(intv_min),
+                            hours = int(intv_hrs),
+                            weeks = intv_weeks,
+                            start_date=starttime,
+                            job_id=str(diagID))
+
+def update_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,enddate,diagID):
+    scheduler.reschedule_job(trigger='cron',
+                            year=job_year,
+                            month=job_month, 
+                            day=job_day, 
+                            week=job_week,
+                            day_of_week=job_dow,
+                            hour=job_hrs,
+                            minute=job_min,
+                            second=job_sec,
+                            start_date=starttime,
+                            end_date=enddate,
+                            job_id=str(diagID))
 
 
 def schedule_listener(event):
