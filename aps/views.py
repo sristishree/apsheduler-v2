@@ -13,6 +13,8 @@ from . import scheduler_helper
 from django.http import HttpResponse
 from threading import Thread
 from .createData import createData
+from .getSchedPack import getSchedulePack
+
 
 
 # Create your views here.
@@ -196,3 +198,23 @@ def fetch(request):
     else:
         return HttpResponse({'resp_obj': command,'status': status.HTTP_200_OK})
     
+@api_view(['POST'])
+def get_schedpack(request):
+    schedRequest = getSchedulePack()
+    diagID = str(request.data['diagnosticsid'])
+    pack = schedRequest.read(diagID)
+    if pack == None:
+        return HttpResponse({'resp_obj': 'Schedule Pack not found', 'status': status.HTTP_400_BAD_RQUEST})
+    else:
+        return HttpResponse({'resp_obj': pack,'status': status.HTTP_200_OK})
+
+@api_view(['GET'])
+def list_schedpack():
+    schedRequest = getSchedulePack()
+    # diagID = str(request.data['diagnosticsid'])
+    packs = schedRequest.list_all()
+    if packs == None:
+        return HttpResponse({'resp_obj': 'Schedule Pack not found', 'status': status.HTTP_400_BAD_RQUEST})
+    else:
+        return HttpResponse({'resp_obj': packs,'status': status.HTTP_200_OK})
+
