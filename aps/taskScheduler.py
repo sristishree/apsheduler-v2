@@ -148,7 +148,6 @@ def scheduleJob(data):
 
         elif jobtype == 'interval':
             # date when it starts, interval - secs, hours,minutes,date,day,weeks,startdate,enddate
-            print("+++++++++++",starttime, intv_hrs, intv_min)
             if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
                     job = scheduler_helper.add_IntervalJob(
@@ -158,7 +157,6 @@ def scheduleJob(data):
                                             intv_weeks,
                                             starttime,
                                             diagnosticsID,correlationID)
-                    print("xxxxxxxxxxxxxxxx")
                     pobj = schedPack()
                     pobj.create_schedPack(jobtype,
                             diagID=diagnosticsID,
@@ -169,7 +167,7 @@ def scheduleJob(data):
                             weeks=intv_weeks,
                             )
 
-                    return (True, "Interval job scheduled!", status.HTTP_201_CREATED)
+                    return (True, "Interval job scheduled!", 201)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
                     return (False, "Job with diagnostic ID already exists", status.HTTP_400_BAD_REQUEST)
             elif starttime == None:

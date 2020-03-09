@@ -5,7 +5,7 @@ from skeduler.settings import client
 class schedPack():
 
     def __init__(self):
-        self.db = client['sched']
+        self.db = client['scheduler_packs']
         self.collection = self.db['schedPacks']
 
     def create_schedPack(self,
@@ -27,25 +27,21 @@ class schedPack():
             r_data = {
                 'diagnosticsid' : diagID,
                 'jobtype': jobtype,
-                'dateSched': [{
+                'schedData': [{
                     'starttime':starttime
                 }] 
             }
             # schedObj = schedulerCollection(r_data)
             # resp = schedObj.create()
         
-            class_collection_id = self.collection.insert({
-                    'diagnosticsid' : diagnosticsid,
-                    'jobtype': jobtype,
-                    'dateSched': dateSched
-                    })
+            class_collection_id = self.collection.insert(r_data)
 
             new_class_collection = self.collection.find_one({'_id' : class_collection_id})
 
             output = {
                     'diagnosticsid' : new_class_collection['diagnosticsid'],
                     'jobtype': new_class_collection['jobtype'],
-                    'dateSched': new_class_collection['dateSched']
+                    'schedData': new_class_collection['schedData']
                 }
 
             return output
@@ -55,7 +51,7 @@ class schedPack():
             r_data = {
                 'diagnosticsid' : diagID,
                 'jobtype': jobtype,
-                'intervalSched': [{
+                'schedData': [{
                     'intv_sec':seconds,
                     'intv_min':minutes,
                     'intv_hrs':hours,
@@ -72,7 +68,7 @@ class schedPack():
             output = {
                     'diagnosticsid' : new_class_collection['diagnosticsid'],
                     'jobtype': new_class_collection['jobtype'],
-                    'intervalSched': new_class_collection['intervalSched']
+                    'schedData': new_class_collection['schedData']
                 }
 
             return output
@@ -83,7 +79,7 @@ class schedPack():
             r_data = {
                 'diagnosticsid' : diagID,
                 'jobtype': jobtype,
-                'cronSched': [{
+                'schedData': [{
                     'starttime':starttime,
                     'job_year':year,
                     'job_month':month,
@@ -102,7 +98,7 @@ class schedPack():
             output = {
                     'diagnosticsid' : new_class_collection['diagnosticsid'],
                     'jobtype': new_class_collection['jobtype'],
-                    'cronSched': new_class_collection['cronSched']
+                    'schedData': new_class_collection['schedData']
                 }
 
             return output

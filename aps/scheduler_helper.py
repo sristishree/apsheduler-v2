@@ -7,10 +7,11 @@ from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
 from .models import tasks
 from django.db.models import F
 import requests
+import pytz
 from django.conf import settings
 from .diagnosticPack import diagnosticPack
 # Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(timezone = pytz.timezone('Asia/Calcutta'))
 scheduler.add_jobstore(DjangoJobStore(), "default")
 
 
@@ -62,12 +63,12 @@ def remove_job(job_id):
     scheduler.remove_job(job_id)
 
 def sendRequest(diagID, correlationID):
-    fetchRequest = diagnosticPack()
-    command = fetchRequest.read(diagID)
-    command = command['command']
+    # fetchRequest = diagnosticPack()
+    # command = fetchRequest.read(diagID)
+    # command = command['command']
     headers = {'Content-Type': 'application/json'}
     data = {
-        "command": command,
+        # "command": command,
         "correlationID": '',
         "diagnosticsid": diagID
     }
@@ -78,10 +79,10 @@ def sendRequest(diagID, correlationID):
         "state_id": random.randint(1,10000)
         #"counter_": "int" Incremental
     }'''
-    url = 'http://mlapi2-svc/compiler?caller=scheduler'
-    res = requests.post(url, headers=headers, data=data)
+    # url = 'http://mlapi2-svc/compiler?caller=scheduler'
+    # res = requests.post(url, headers=headers, data=data)
     #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
-    print("Event fired", res)
+    print("Event fired", data)
 '''
 def sendRequest(diagID):
     

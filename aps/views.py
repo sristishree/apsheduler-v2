@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import JsonResponse
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -25,11 +26,11 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 class TaskAPIView(APIView):
 
-    def schedPack(data):
-        r_data = data
-        schedObj = schedulerCollection(r_data)
-        resp = schedObj.create()
-        return ("Scheduler Pack created")
+    # def schedPack(data):
+    #     r_data = data
+    #     schedObj = schedulerCollection(r_data)
+    #     resp = schedObj.create()
+    #     return ("Scheduler Pack created")
 
 
     def schedulerPost(self, data):
@@ -37,7 +38,6 @@ class TaskAPIView(APIView):
         serializer = TaskSerializer(data=data.data)
         # print(serializer.is_valid)
         if serializer.is_valid():
-            print("IN the views")
             resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(data)
             print (resp_success,resp_obj)
 
@@ -49,21 +49,21 @@ class TaskAPIView(APIView):
                 serializer.save()
             # schedPack(data)
             
-            return HttpResponse({'resp_obj': resp_obj, 'status':resp_status})
+            return JsonResponse({resp_obj}, status=resp_status,safe=False)
             #return HttpResponse(resp_obj, status=resp_status)
         else:
-            print(serializer.is_valid(),"Serializer",serializer.errors)
+            print(serializer.is_valid(),"Serializer Errors",serializer.errors)
             return HttpResponse({'error':serializer.errors,'status':status.HTTP_400_BAD_REQUEST})
             #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
     def post(self, request, format=None):
-        print("inthetherd")
+        print(type(request.data))
         t = Thread(target = self.schedulerPost, args = [request])
         t.daemon = False
         t.start()
         t.join()
-        return HttpResponse({"success": "Data sent to compiler", "status": status.HTTP_202_ACCEPTED})
+        return JsonResponse({"scheduler":"Data sent to scheduler"}, status=202, safe=True)
     
     '''
     def put(self, request, pk=None, format=None):
@@ -120,9 +120,9 @@ def sched_list(request):
      jobdict = {}
     #  jt = type(job.trigger)
 
-     jobdict['job_name'] = job.name
+    #  jobdict['job_name'] = job.name
     #  jobdict['job_trigger'] = jt
-     jobdict['next run'] = job.next_run_time    
+    #  jobdict['next run'] = job.next_run_time    
      jobdict['diagnosticsid'] = job.args
     #  jobdict['job'] = job
     #  for f in job.trigger.fields:
@@ -176,11 +176,11 @@ def sched_remove(request):
             a = tasks.objects.get(pk=str(request.data['diagnosticsid']))
             scheduler_helper.remove_job(r_jobid)
             a.delete()
-            return HttpResponse({'resp_obj':"Job Deleted", 'status':status.HTTP_200_OK})
+            return JsonResponse({'success':"Job Deleted"}, status=200)
         except:
-            return HttpResponse({'error':"PK not present"})
+            return JsonResponse({'error':"PK not present"})
     else:
-        return HttpResponse({'resp_obj':"Job not found", 'status':status.HTTP_400_BAD_REQUEST})
+        return JsonResponse({'error':"Job not found"}, status=400)
 
 @api_view(['POST'])
 def write_data(request):
@@ -209,12 +209,14 @@ def get_schedpack(request):
         return HttpResponse({'resp_obj': pack,'status': status.HTTP_200_OK})
 
 @api_view(['GET'])
-def list_schedpack():
+def list_schedpack(request):
     schedRequest = getSchedulePack()
     # diagID = str(request.data['diagnosticsid'])
     packs = schedRequest.list_all()
+    print(type(packs),type({'Schedule Pack not found'}))
     if packs == None:
-        return HttpResponse({'resp_obj': 'Schedule Pack not found', 'status': status.HTTP_400_BAD_RQUEST})
+        return JsonResponse({'Schedule Pack not found'}, status=400, safe=False)
     else:
-        return HttpResponse({'resp_obj': packs,'status': status.HTTP_200_OK})
+        print(packs)
+        return JsonResponse( packs, status=200, safe=False)
 
