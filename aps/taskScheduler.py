@@ -140,6 +140,13 @@ def scheduleJob(data):
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
                     job = scheduler_helper.add_DateJob(starttime,diagnosticsID,correlationID)
+                    
+                    pobj = schedPack()
+                    pobj.create_schedPack(jobtype,
+                            diagID=diagnosticsID,
+                            starttime=starttime,
+                            )
+                    
                     return (True,"Date job scheduled!", status.HTTP_201_CREATED)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
                     return (False,"Job with Diagnostic ID already exists", status.HTTP_400_BAD_REQUEST )
@@ -194,6 +201,22 @@ def scheduleJob(data):
                                         enddate,
                                         diagnosticsID,
                                         correlationID)
+                        
+                    pobj = schedPack()
+                    pobj.create_schedPack(jobtype,
+                            diagID=diagnosticsID,
+                            starttime=starttime,
+                            hours=job_hrs,
+                            minutes=job_min,
+                            seconds=job_sec,
+                            year=job_year,
+                            month=job_month,
+                            day=job_day,
+                            week=job_week,
+                            day_of_week=job_dow,
+                            endtime=enddate
+                            )
+
                     return (True,"Cron job scheduled!", status.HTTP_201_CREATED)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
                     return (False,"Job with diagnostic ID already exists", status.HTTP_400_BAD_REQUEST)

@@ -26,13 +26,6 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 class TaskAPIView(APIView):
 
-    # def schedPack(data):
-    #     r_data = data
-    #     schedObj = schedulerCollection(r_data)
-    #     resp = schedObj.create()
-    #     return ("Scheduler Pack created")
-
-
     def schedulerPost(self, data):
         # print(data)
         serializer = TaskSerializer(data=data.data)
@@ -42,12 +35,8 @@ class TaskAPIView(APIView):
             print (resp_success,resp_obj)
 
             if resp_success:
-                # a = tasks.objects.get(pk=int(request.data['diagID']))
-                # a.job_runs = F('job_runs') + 1
-                # print(serializer.data['diagID'])
-                # query = tasks.objects.
                 serializer.save()
-            # schedPack(data)
+            
             
             return JsonResponse({resp_obj}, status=resp_status,safe=False)
             #return HttpResponse(resp_obj, status=resp_status)

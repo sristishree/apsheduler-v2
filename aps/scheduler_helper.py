@@ -10,6 +10,9 @@ import requests
 import pytz
 from django.conf import settings
 from .diagnosticPack import diagnosticPack
+from .schedulerPack import schedPack
+
+
 # Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
 scheduler = BackgroundScheduler(timezone = pytz.timezone('Asia/Calcutta'))
 scheduler.add_jobstore(DjangoJobStore(), "default")
