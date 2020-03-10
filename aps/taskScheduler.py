@@ -28,6 +28,18 @@ from .schedulerPack import schedPack
      "intv_time":"00:00:45"
  }' -H "Content-Type: application/json" -X POST http://localhost:8000/schedule/'''
 
+ 
+'''curl -d '{
+     "correlationID":"",
+     "diagnosticsid":"12",
+     "starttime":"2020-03-05 19:40:10",
+     "endtime" : "2020-10-02 20:18:10",
+     "jobtype":"cron",
+     "job_hours":"20",
+     "job_minutes":"30"
+ }' -H "Content-Type: application/json" -X POST http://localhost:8000/schedule/'''
+
+
 '''curl -d '{
       "diagnosticsid" : "1",
       "starttime" : "2020-02-24 13:20:10",

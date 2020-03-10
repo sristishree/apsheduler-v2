@@ -12,7 +12,7 @@ class schedPack():
                     jobtype=None,
                     diagID=None,
                     starttime=None,
-                    endttime=None,
+                    endtime=None,
                     intv_time=None,
                     hours=None,
                     minutes=None,

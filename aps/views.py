@@ -37,12 +37,12 @@ class TaskAPIView(APIView):
             if resp_success:
                 serializer.save()
             
-            
-            return JsonResponse({resp_obj}, status=resp_status,safe=False)
+            print(type(resp_obj),resp_obj)
+            return JsonResponse(resp_obj, status=resp_status,safe=False)
             #return HttpResponse(resp_obj, status=resp_status)
         else:
             print(serializer.is_valid(),"Serializer Errors",serializer.errors)
-            return HttpResponse({'error':serializer.errors,'status':status.HTTP_400_BAD_REQUEST})
+            return HttpResponse({'error':serializer.errors}, status=400)
             #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
@@ -111,7 +111,7 @@ def sched_list(request):
 
     #  jobdict['job_name'] = job.name
     #  jobdict['job_trigger'] = jt
-    #  jobdict['next run'] = job.next_run_time    
+     jobdict['next run'] = job.next_run_time    
      jobdict['diagnosticsid'] = job.args
     #  jobdict['job'] = job
     #  for f in job.trigger.fields:
@@ -193,9 +193,9 @@ def get_schedpack(request):
     diagID = str(request.data['diagnosticsid'])
     pack = schedRequest.read(diagID)
     if pack == None:
-        return HttpResponse({'resp_obj': 'Schedule Pack not found', 'status': status.HTTP_400_BAD_RQUEST})
+        return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400)
     else:
-        return HttpResponse({'resp_obj': pack,'status': status.HTTP_200_OK})
+        return JsonResponse({'resp_obj': pack},status=200)
 
 @api_view(['GET'])
 def list_schedpack(request):
@@ -209,3 +209,13 @@ def list_schedpack(request):
         print(packs)
         return JsonResponse( packs, status=200, safe=False)
 
+@api_view(['POST'])
+def delete_schedpack(request):
+    schedRequest = getSchedulePack()
+    diagID = str(request.data['diagnosticsid'])
+    pack = schedRequest.delete_pack(diagID)
+    print(pack,"OOOOOOOOOO")
+    if pack == None:
+        return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400)
+    else:
+        return JsonResponse({'resp_obj': "Removed Schedule pack"}, status=200)
