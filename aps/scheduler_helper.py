@@ -66,12 +66,12 @@ def remove_job(job_id):
     scheduler.remove_job(job_id)
 
 def sendRequest(diagID, correlationID):
-    # fetchRequest = diagnosticPack()
-    # command = fetchRequest.read(diagID)
-    # command = command['command']
+    fetchRequest = diagnosticPack()
+    command = fetchRequest.read(diagID)
+    command = command['command']
     headers = {'Content-Type': 'application/json'}
     data = {
-        # "command": command,
+        "command": command,
         "correlationID": '',
         "diagnosticsid": diagID
     }
@@ -82,10 +82,10 @@ def sendRequest(diagID, correlationID):
         "state_id": random.randint(1,10000)
         #"counter_": "int" Incremental
     }'''
-    # url = 'http://mlapi2-svc/compiler?caller=scheduler'
-    # res = requests.post(url, headers=headers, data=data)
+    url = 'http://mlapi2-svc/compiler?caller=scheduler'
+    res = requests.post(url, headers=headers, data=data)
     #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
-    print("Event fired", data)
+    print("Event fired", res)
 '''
 def sendRequest(diagID):
     

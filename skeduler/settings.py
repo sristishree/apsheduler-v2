@@ -18,9 +18,9 @@ global r
 
 global client, schedClient
 
-# client = MongoClient('mongodb://root:K8EQhNuwF8DqX9tG@mongo-mongodb.development.svc.cluster.local:27017/')
-client = MongoClient('mongodb://root2:rootpass2@127.0.0.1:27018/?authSource=admin&authMechanism=SCRAM-SHA-1')
-schedClient = MongoClient('mongodb://root:rootpass@127.0.0.1:27017/?authSource=admin&authMechanism=SCRAM-SHA-1')
+client = MongoClient('mongodb://root:K8EQhNuwF8DqX9tG@mongo-mongodb.development.svc.cluster.local:27017/')
+# client = MongoClient('mongodb://root2:rootpass2@127.0.0.1:27018/?authSource=admin&authMechanism=SCRAM-SHA-1')
+# schedClient = MongoClient('mongodb://root:rootpass@127.0.0.1:27017/?authSource=admin&authMechanism=SCRAM-SHA-1')
 
 
 

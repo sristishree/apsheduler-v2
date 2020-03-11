@@ -1,1 +1,4 @@
 /venv
+aps/__pycache__/
+skeduler/__pycache__/
+aps/migrations/__pycache__/
