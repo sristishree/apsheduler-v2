@@ -1,6 +1,8 @@
 import logging
 import random
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.mongodb import MongoDBJobStore
+
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from django_apscheduler.jobstores import  DjangoJobStore,register_events, register_job
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
@@ -11,12 +13,17 @@ import pytz
 from django.conf import settings
 from .diagnosticPack import diagnosticPack
 from .schedulerPack import schedPack
+from skeduler.settings import schedClient
 
 
+# jobstores = {
+#     'mongo': MongoDBJobStore(),
+#     'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
+# }
 # Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
 scheduler = BackgroundScheduler(timezone = pytz.timezone('Asia/Calcutta'))
-scheduler.add_jobstore(DjangoJobStore(), "default")
-
+# scheduler.add_jobstore(DjangoJobStore(), "default")
+scheduler.add_jobstore(MongoDBJobStore(client=schedClient),"default")
 
 
 def start_sched():
@@ -34,7 +41,7 @@ def start_sched():
     # scheduler.add_job("core.models.MyModel.my_class_method", "cron", id="my_class_method", hour=0, replace_existing=True)
 
     # Add the scheduled jobs to the Django admin interface
-    register_events(scheduler)
+    # register_events(scheduler)
     print("yyyyyyyyyy")
     scheduler.start()
 
@@ -72,12 +79,12 @@ def remove_job(job_id):
     scheduler.remove_job(job_id)
 
 def sendRequest(diagID, correlationID):
-    fetchRequest = diagnosticPack()
-    command = fetchRequest.read(diagID)
-    command = command['command']
+    # fetchRequest = diagnosticPack()
+    # command = fetchRequest.read(diagID)
+    # command = command['command']
     headers = {'Content-Type': 'application/json'}
     data = {
-        "command": command,
+        # "command": command,
         "correlationID": '',
         "diagnosticsid": diagID
     }
@@ -88,10 +95,10 @@ def sendRequest(diagID, correlationID):
         "state_id": random.randint(1,10000)
         #"counter_": "int" Incremental
     }'''
-    url = 'http://mlapi2-svc/compiler?caller=scheduler'
-    res = requests.post(url, headers=headers, data=data)
+    # url = 'http://mlapi2-svc/compiler?caller=scheduler'
+    # res = requests.post(url, headers=headers, data=data)
     #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
-    print("Event fired", res)
+    print("Event fired", data)
 '''
 def sendRequest(diagID):
     
@@ -171,7 +178,7 @@ def schedule_listener(event):
         else: 
             a.job_success = F('job_success')+1
             # job = scheduler.get_job(event.job_id)
-            print('Job created', event.job_id)
+            print('Job ran', event.job_id)
 
         a.save()
     except:
