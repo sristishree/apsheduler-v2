@@ -38,9 +38,15 @@ def start_sched():
     print("yyyyyyyyyy")
     scheduler.start()
 
-def listjobs():
-    scl = scheduler.get_jobs()
-    return (scl)
+def listjobs(job_id=None):
+    if job_id == None:
+        scl = scheduler.get_jobs()
+        return (scl)
+    else: 
+        print(job_id,"From helper")
+        scl = scheduler.get_job(job_id)
+        print(repr(scl.trigger), type(scl.trigger))
+        return (scl)
 
 def state():
     return scheduler.state

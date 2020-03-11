@@ -21,11 +21,11 @@ from .schedulerPack import schedPack
 
 '''curl -d '{
      "correlationID":"",
-     "diagnosticsid":"1",
+     "diagnosticsid":"32",
      "starttime":"2020-03-05 19:40:10",
      "endtime" : "2020-10-02 20:18:10",
      "jobtype":"interval",
-     "intv_time":"00:00:45"
+     "intv_time":"00:01:30"
  }' -H "Content-Type: application/json" -X POST http://localhost:8000/schedule/'''
 
  

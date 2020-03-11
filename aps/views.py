@@ -98,6 +98,49 @@ class TaskAPIView(APIView):
         
 
 
+class SchedulerTasks(APIView):
+    
+    '''
+    Class to get and delete tasks
+    '''
+
+    def get(self, request, format=None):
+        if "id" in request.GET:
+            print(type(request.GET['id']), request.GET['id'])
+            schedules=[]
+            scl = scheduler_helper.listjobs(request.GET['id'])
+            jobdict = {
+                'diagnosticsid' : scl.args[0],
+                'next_run' : scl.next_run_time,
+            }
+            schedules.append(jobdict)
+            return JsonResponse(schedules, status=200, safe=False)
+        else:
+            schedules=[]
+            scl = scheduler_helper.listjobs()
+            for job in scl:
+                jobdict = {}
+                jobdict['next_run'] = job.next_run_time
+                jobdict['diagnosticsid'] = job.args
+                schedules.append(jobdict)
+            return JsonResponse(schedules, status=200, safe=False)
+
+    def  delete(self, request, format=None):
+        r_jobid = str(request.data['diagnosticsid'])
+        if scheduler_helper.job_exists(r_jobid):
+            try:
+                a = tasks.objects.get(pk=str(request.data['diagnosticsid']))
+                scheduler_helper.remove_job(r_jobid)
+                a.delete()
+                return JsonResponse({'success':"Job Deleted"}, status=200)
+            except:
+                return JsonResponse({'error':"PK not present"})
+        else:
+            return JsonResponse({'error':"Job not found"}, status=400)
+
+        # return HttpResponse(schedules,status=200)
+
+
 @api_view(['GET'])
 def sched_list(request):
  schedules = []
@@ -214,7 +257,6 @@ def delete_schedpack(request):
     schedRequest = getSchedulePack()
     diagID = str(request.data['diagnosticsid'])
     pack = schedRequest.delete_pack(diagID)
-    print(pack,"OOOOOOOOOO")
     if pack == None:
         return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400)
     else:
