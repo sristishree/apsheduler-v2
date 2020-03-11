@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler-deployment
+spec:
+  selector:
+    matchLabels:
+      app: schedulerv2
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: schedulerv2
+    spec:
+      containers:
+      - name: schedulerv2
+        image: manjithd2/aps-scheduler
+        ports:
+        - containerPort: 8002
+        imagePullPolicy: Always
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler-svc
+spec:
+  selector:
+    app: schedulerv2
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8002
+  type: LoadBalancer

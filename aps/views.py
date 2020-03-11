@@ -26,13 +26,6 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 class TaskAPIView(APIView):
 
-    # def schedPack(data):
-    #     r_data = data
-    #     schedObj = schedulerCollection(r_data)
-    #     resp = schedObj.create()
-    #     return ("Scheduler Pack created")
-
-
     def schedulerPost(self, data):
         # print(data)
         serializer = TaskSerializer(data=data.data)
@@ -42,18 +35,14 @@ class TaskAPIView(APIView):
             print (resp_success,resp_obj)
 
             if resp_success:
-                # a = tasks.objects.get(pk=int(request.data['diagID']))
-                # a.job_runs = F('job_runs') + 1
-                # print(serializer.data['diagID'])
-                # query = tasks.objects.
                 serializer.save()
-            # schedPack(data)
             
-            return JsonResponse({resp_obj}, status=resp_status,safe=False)
+            print(type(resp_obj),resp_obj)
+            return JsonResponse(resp_obj, status=resp_status,safe=False)
             #return HttpResponse(resp_obj, status=resp_status)
         else:
             print(serializer.is_valid(),"Serializer Errors",serializer.errors)
-            return HttpResponse({'error':serializer.errors,'status':status.HTTP_400_BAD_REQUEST})
+            return HttpResponse({'error':serializer.errors}, status=400)
             #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
@@ -109,6 +98,90 @@ class TaskAPIView(APIView):
         
 
 
+class SchedulerTasks(APIView):
+    
+    '''
+    Class to get and delete tasks
+    '''
+
+    def get(self, request, format=None):
+        if "id" in request.GET:
+            print(type(request.GET['id']), request.GET['id'])
+            schedules=[]
+            scl = scheduler_helper.listjobs(request.GET['id'])
+            jobdict = {
+                'diagnosticsid' : scl.args[0],
+                'next_run' : scl.next_run_time,
+            }
+            schedules.append(jobdict)
+            return JsonResponse(schedules, status=200, safe=False)
+        else:
+            schedules=[]
+            scl = scheduler_helper.listjobs()
+            for job in scl:
+                jobdict = {}
+                jobdict['next_run'] = job.next_run_time
+                jobdict['diagnosticsid'] = job.args
+                schedules.append(jobdict)
+            return JsonResponse(schedules, status=200, safe=False)
+
+    def  delete(self, request, format=None):
+        r_jobid = str(request.data['diagnosticsid'])
+        if scheduler_helper.job_exists(r_jobid):
+            try:
+                a = tasks.objects.get(pk=str(request.data['diagnosticsid']))
+                scheduler_helper.remove_job(r_jobid)
+                a.delete()
+                return JsonResponse({'success':"Job Deleted"}, status=200)
+            except:
+                return JsonResponse({'error':"PK not present"})
+        else:
+            return JsonResponse({'error':"Job not found"}, status=400)
+
+        # return HttpResponse(schedules,status=200)
+
+
+class SchedulerPacks(APIView):
+    
+    '''
+    Class to get and delete tasks
+    '''
+
+    def get(self, request, format=None):
+        if "id" in request.GET:
+            print(type(request.GET['id']), request.GET['id'])
+            diag_id = request.GET['id']
+            schedRequest = getSchedulePack()
+            pack = schedRequest.read(diagID)
+            if pack == None:
+                return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400)
+            else:
+                return JsonResponse({'resp_obj': pack},status=200)
+        else:
+            schedRequest = getSchedulePack()
+            packs = schedRequest.list_all()
+            if packs == None:
+                return JsonResponse({'Schedule Pack not found'}, status=400, safe=False)
+            else:
+                print(packs)
+                return JsonResponse( packs, status=200, safe=False)
+
+    def  delete(self, request, format=None):
+        if "id" in request.GET:
+            schedRequest = getSchedulePack()
+            diagID = str(request.GET['id'])
+            pack = schedRequest.delete_pack(diagID)
+            if pack == None:
+                return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400)
+            else:
+                return JsonResponse({'resp_obj': "Removed Schedule pack"}, status=200)
+        else:
+            return JsonResponse({'ID for deletion not given'}, status=400)
+        # return HttpResponse(schedules,status=200)
+
+
+
+
 @api_view(['GET'])
 def sched_list(request):
  schedules = []
@@ -122,7 +195,7 @@ def sched_list(request):
 
     #  jobdict['job_name'] = job.name
     #  jobdict['job_trigger'] = jt
-    #  jobdict['next run'] = job.next_run_time    
+     jobdict['next run'] = job.next_run_time    
      jobdict['diagnosticsid'] = job.args
     #  jobdict['job'] = job
     #  for f in job.trigger.fields:
@@ -204,9 +277,9 @@ def get_schedpack(request):
     diagID = str(request.data['diagnosticsid'])
     pack = schedRequest.read(diagID)
     if pack == None:
-        return HttpResponse({'resp_obj': 'Schedule Pack not found', 'status': status.HTTP_400_BAD_RQUEST})
+        return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400)
     else:
-        return HttpResponse({'resp_obj': pack,'status': status.HTTP_200_OK})
+        return JsonResponse({'resp_obj': pack},status=200)
 
 @api_view(['GET'])
 def list_schedpack(request):
@@ -220,3 +293,12 @@ def list_schedpack(request):
         print(packs)
         return JsonResponse( packs, status=200, safe=False)
 
+@api_view(['POST'])
+def delete_schedpack(request):
+    schedRequest = getSchedulePack()
+    diagID = str(request.data['diagnosticsid'])
+    pack = schedRequest.delete_pack(diagID)
+    if pack == None:
+        return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400)
+    else:
+        return JsonResponse({'resp_obj': "Removed Schedule pack"}, status=200)

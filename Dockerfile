@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.6-alpine
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=0
@@ -10,4 +10,4 @@ COPY . /app/
 
 # EXPOSE 8001
 
-# CMD ["python","manage.py", "runserver", "0.0.0.0:8001"]
+CMD ["python","manage.py", "runserver", "0.0.0.0:8002"]

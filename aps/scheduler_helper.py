@@ -10,6 +10,9 @@ import requests
 import pytz
 from django.conf import settings
 from .diagnosticPack import diagnosticPack
+from .schedulerPack import schedPack
+
+
 # Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
 scheduler = BackgroundScheduler(timezone = pytz.timezone('Asia/Calcutta'))
 scheduler.add_jobstore(DjangoJobStore(), "default")
@@ -35,9 +38,15 @@ def start_sched():
     print("yyyyyyyyyy")
     scheduler.start()
 
-def listjobs():
-    scl = scheduler.get_jobs()
-    return (scl)
+def listjobs(job_id=None):
+    if job_id == None:
+        scl = scheduler.get_jobs()
+        return (scl)
+    else: 
+        print(job_id,"From helper")
+        scl = scheduler.get_job(job_id)
+        print(repr(scl.trigger), type(scl.trigger))
+        return (scl)
 
 def state():
     return scheduler.state
@@ -63,12 +72,12 @@ def remove_job(job_id):
     scheduler.remove_job(job_id)
 
 def sendRequest(diagID, correlationID):
-    # fetchRequest = diagnosticPack()
-    # command = fetchRequest.read(diagID)
-    # command = command['command']
+    fetchRequest = diagnosticPack()
+    command = fetchRequest.read(diagID)
+    command = command['command']
     headers = {'Content-Type': 'application/json'}
     data = {
-        # "command": command,
+        "command": command,
         "correlationID": '',
         "diagnosticsid": diagID
     }
@@ -79,10 +88,10 @@ def sendRequest(diagID, correlationID):
         "state_id": random.randint(1,10000)
         #"counter_": "int" Incremental
     }'''
-    # url = 'http://mlapi2-svc/compiler?caller=scheduler'
-    # res = requests.post(url, headers=headers, data=data)
+    url = 'http://mlapi2-svc/compiler?caller=scheduler'
+    res = requests.post(url, headers=headers, data=data)
     #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
-    print("Event fired", data)
+    print("Event fired", res)
 '''
 def sendRequest(diagID):
     
