@@ -1,19 +1,20 @@
 import logging
 import random
+import requests
+import pytz
+import json
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.mongodb import MongoDBJobStore
-
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from django_apscheduler.jobstores import  DjangoJobStore,register_events, register_job
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
 from .models import tasks
 from django.db.models import F
-import requests
-import pytz
 from django.conf import settings
 from .diagnosticPack import diagnosticPack
 from .schedulerPack import schedPack
-from skeduler.settings import schedClient
+from skeduler.settings import client as schedClient
 
 
 # jobstores = {
@@ -50,9 +51,7 @@ def listjobs(job_id=None):
         scl = scheduler.get_jobs()
         return (scl)
     else: 
-        print(job_id,"From helper")
         scl = scheduler.get_job(job_id)
-        print(repr(scl.trigger), type(scl.trigger))
         return (scl)
 
 def state():
@@ -79,15 +78,17 @@ def remove_job(job_id):
     scheduler.remove_job(job_id)
 
 def sendRequest(diagID, correlationID):
-    # fetchRequest = diagnosticPack()
-    # command = fetchRequest.read(diagID)
-    # command = command['command']
+    fetchRequest = diagnosticPack()
+    command = fetchRequest.read(diagID)
+    command = command['command']
     headers = {'Content-Type': 'application/json'}
-    data = {
-        # "command": command,
+    data_compiler = {
+        "command": command,
         "correlationID": '',
         "diagnosticsid": diagID
     }
+
+    data = json.dumps(data_compiler)
     '''
     data = { 
         "diagnosticsid" : diagID,
@@ -95,19 +96,10 @@ def sendRequest(diagID, correlationID):
         "state_id": random.randint(1,10000)
         #"counter_": "int" Incremental
     }'''
-    # url = 'http://mlapi2-svc/compiler?caller=scheduler'
-    # res = requests.post(url, headers=headers, data=data)
+    url = 'http://mlapi2-svc/compiler?caller=scheduler'
+    res = requests.post(url, headers=headers, data=data)
     #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
-    print("Event fired", data)
-'''
-def sendRequest(diagID):
-    
-    b = tasks.objects.get(pk=int(diagID))
-    lookupId = b.lookup_id
-    jobRuns = b.job_runs
-
-    print(diagID, "Reached sendReq()", lookupId, jobRuns)
-'''
+    print("Event fired", res)
 
 
 def add_DateJob(starttime,diagID,correlationid):
