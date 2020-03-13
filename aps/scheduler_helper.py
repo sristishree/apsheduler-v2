@@ -78,12 +78,12 @@ def remove_job(job_id):
     scheduler.remove_job(job_id)
 
 def sendRequest(diagID, correlationID):
-    fetchRequest = diagnosticPack()
-    command = fetchRequest.read(diagID)
-    command = command['command']
+    # fetchRequest = diagnosticPack()
+    # command = fetchRequest.read(diagID)
+    # command = command['command']
     headers = {'Content-Type': 'application/json'}
     data_compiler = {
-        "command": command,
+        # "command": command,
         "correlationID": '',
         "diagnosticsid": diagID
     }
@@ -96,10 +96,10 @@ def sendRequest(diagID, correlationID):
         "state_id": random.randint(1,10000)
         #"counter_": "int" Incremental
     }'''
-    url = 'http://mlapi2-svc/compiler?caller=scheduler'
-    res = requests.post(url, headers=headers, data=data)
+    # url = 'http://mlapi2-svc/compiler?caller=scheduler'
+    # res = requests.post(url, headers=headers, data=data)
     #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
-    print("Event fired", res)
+    print("Event fired", data)
 
 
 def add_DateJob(starttime,diagID,correlationid):
@@ -115,7 +115,7 @@ def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID,
                                     id=str(diagID), args=[diagID,correlationid],jitter=30,
                                     replace_existing=True)
 
-def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,enddate,diagID,correlationid):
+def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,endtime,diagID,correlationid):
      scheduler.add_job(sendRequest, trigger='cron',
                                         year=job_year,
                                         month=job_month, 
@@ -126,7 +126,7 @@ def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job
                                         minute=job_min,
                                         second=job_sec,
                                         start_date=starttime,
-                                        end_date=enddate,
+                                        end_date=endtime,
                                         id=str(diagID), args=[diagID,correlationid],jitter=30,
                                         replace_existing=True)
 
@@ -143,7 +143,7 @@ def update_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diag
                             start_date=starttime,
                             job_id=str(diagID))
 
-def update_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,enddate,diagID):
+def update_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,endtime,diagID):
     scheduler.reschedule_job(trigger='cron',
                             year=job_year,
                             month=job_month, 
@@ -154,7 +154,7 @@ def update_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,
                             minute=job_min,
                             second=job_sec,
                             start_date=starttime,
-                            end_date=enddate,
+                            end_date=endtime,
                             job_id=str(diagID))
 
 

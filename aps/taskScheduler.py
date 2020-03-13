@@ -114,9 +114,9 @@ def timeformatter(cur_time):
 def cronDateFormatter(cur_date):
     targetDate = str(cur_date)
     if re.match(r"\d\d\d\d-\d\d-\d\d",targetDate):
-        year = targetTime[:4]
-        month = targetTime[5:7]
-        date = targetTime[8:10]
+        year = targetDate[:4]
+        month = targetDate[5:7]
+        date = targetDate[8:10]
         return (year,month,date)
     else:
         return(None,None,None)
@@ -155,11 +155,11 @@ def scheduleJob(data):
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
                     job = scheduler_helper.add_DateJob(starttime,diagnosticsID,correlationID)
                     
-                    pobj = schedPack()
-                    pobj.create_schedPack(jobtype,
-                            diagID=diagnosticsID,
-                            starttime=starttime,
-                            )
+                    # pobj = schedPack()
+                    # pobj.create_schedPack(jobtype,
+                    #         diagID=diagnosticsID,
+                    #         starttime=starttime,
+                    #         )
                     
                     return (True,"Date job scheduled!", status.HTTP_201_CREATED)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
@@ -171,12 +171,12 @@ def scheduleJob(data):
 
             
             '''
-            Initialize variables for Cron Job
+            Initialize variables for Interval Job
             '''
 
             intv_time = r_data['intv_time']
             intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
-            intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
+            intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data and r_data['intv_weeks'] != "" else 0
 
             if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
@@ -187,15 +187,15 @@ def scheduleJob(data):
                                             intv_weeks,
                                             starttime,
                                             diagnosticsID,correlationID)
-                    pobj = schedPack()
-                    pobj.create_schedPack(jobtype,
-                            diagID=diagnosticsID,
-                            starttime=starttime,
-                            hours=intv_hrs,
-                            minutes=intv_min,
-                            seconds=intv_sec,
-                            weeks=intv_weeks,
-                            )
+                    # pobj = schedPack()
+                    # pobj.create_schedPack(jobtype,
+                    #         diagID=diagnosticsID,
+                    #         starttime=starttime,
+                    #         hours=intv_hrs,
+                    #         minutes=intv_min,
+                    #         seconds=intv_sec,
+                    #         weeks=intv_weeks,
+                    #         )
 
                     return (True, "Interval job scheduled!", 201)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
@@ -213,15 +213,21 @@ def scheduleJob(data):
             Initialize variables for Cron Job
             '''
 
-            cron_date = r_data['date']
-            cron_time = r_data['time']
+            cron_date = r_data['date'] if 'date' in r_data else None 
+            cron_time = r_data['time'] if 'time' in r_data else None
             job_year,job_month,job_day = cronDateFormatter(cron_date)
+            
             job_hrs,job_min,job_sec = timeformatter(cron_time)
-            job_dow_ui = r_data['dow'] if "dow" in r_data else None
-            job_dow = job_dow_ui.lower()
+            
+            job_week = r_data['job_week'] if "job_week" in r_data else None
+            
+            job_dow = r_data['dow'] if "dow" in r_data else None
+            if job_dow != None:
+                job_dow = job_dow.lower()[:3]
 
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
+                    print(starttime,endtime,'///',job_year,job_month,job_day,"ASDASDAS",job_hrs,job_min,job_sec )
                     job = scheduler_helper.add_CronJob(
                                         job_year,
                                         job_month, 
@@ -232,24 +238,23 @@ def scheduleJob(data):
                                         job_min,
                                         job_sec,
                                         starttime,
-                                        enddate,
+                                        endtime,
                                         diagnosticsID,
                                         correlationID)
-                        
-                    pobj = schedPack()
-                    pobj.create_schedPack(jobtype,
-                            diagID=diagnosticsID,
-                            starttime=starttime,
-                            hours=job_hrs,
-                            minutes=job_min,
-                            seconds=job_sec,
-                            year=job_year,
-                            month=job_month,
-                            day=job_day,
-                            week=job_week,
-                            day_of_week=job_dow,
-                            endtime=enddate
-                            )
+                    # pobj = schedPack()
+                    # pobj.create_schedPack(jobtype,
+                    #         diagID=diagnosticsID,
+                    #         starttime=starttime,
+                    #         hours=job_hrs,
+                    #         minutes=job_min,
+                    #         seconds=job_sec,
+                    #         year=job_year,
+                    #         month=job_month,
+                    #         day=job_day,
+                    #         week=job_week,
+                    #         day_of_week=job_dow,
+                    #         endtime=enddate
+                    #         )
 
                     return (True,"Cron job scheduled!", status.HTTP_201_CREATED)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
@@ -299,7 +304,7 @@ def updateJob(data):
 
             intv_time = r_data['intv_time']
             intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
-            intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
+            intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data and r_data['intv_weeks'] != "" else 0
             
             if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
                 if scheduler_helper.get_job(str(diagnosticsID)) != None:
