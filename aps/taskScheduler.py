@@ -73,7 +73,7 @@ from .schedulerPack import schedPack
 # curl -d '{"status":"start"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/status
 # curl  -H "Content-Type: application/json" -X GET localhost:8000/schedule/tasks
 # curl -d '{"diagnosticsid":"1"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/fetch
-
+# cron
 
 
 
@@ -81,6 +81,7 @@ from .schedulerPack import schedPack
 #     currentDT = datetime.datetime.now()
 #     print(diagID,"sendRequest()",currentDT.strftime("%Y-%m-%d %H:%M:%S") )
 
+### BEGIN HELPER FUNCTIONS ###
 
 def dateformatter(cur_date):
     date_time = {
@@ -110,45 +111,46 @@ def timeformatter(cur_time):
     else:
         return(None,None,None)
 
+def cronDateFormatter(cur_date):
+    targetDate = str(cur_date)
+    if re.match(r"\d\d\d\d-\d\d-\d\d",targetDate):
+        year = targetTime[:4]
+        month = targetTime[5:7]
+        date = targetTime[8:10]
+        return (year,month,date)
+    else:
+        return(None,None,None)
+
+def initializationTimeFormatter(ui_time):
+    ct = str(ui_time)
+    time_format = ct.replace("T"," ")
+    return (time_format)
+
+
+### END OF HELPER FUNCTIONS ###    
+
 def scheduleJob(data):
     print("Processing request to scheduler ",data.data)
     r_data = data.data
     diagnosticsID = r_data['diagnosticsid'] if "diagnosticsid" in r_data else 0
     correlationID = r_data.get('correlationID')
-    starttime = r_data['starttime'] if "starttime" in r_data else None
-    endtime = r_data['endtime'] if "endtime" in r_data else None
+    starttime_ui = r_data['starttime'] if "starttime" in r_data else None
+    endtime_ui = r_data['endtime'] if "endtime" in r_data else None
     jobtype = r_data['jobtype'] if "jobtype" in r_data else None
-    
-    ## INTERVAL JOB VARIABLES 
-    intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
-    intv_time = r_data['intv_time'] if "intv_time" in r_data else None
-    intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
 
-    ## Add format check for intv_time 
-
-    # intv_sec = int(r_data['intv_seconds']) if "intv_seconds" in r_data else 0
-    # intv_min = int(r_data['intv_minutes']) if "intv_minutes" in r_data else 0
-    # intv_hrs = int(r_data['intv_hours'])if "intv_hours" in r_data else 0
-    
-    
-    ## CRONJOB VARIABLES
-    # job_month, job_day, job_week, job_dow, job_seconds, job_minutes, job_hours
-    job_month = r_data['job_month'] if "job_month" in r_data else None
-    job_day = r_data['job_day'] if "job_day" in r_data else None
-    job_week = r_data['job_week'] if "job_week" in r_data else None
-    job_year = r_data['job_year'] if "job_year" in r_data else None
-    job_dow = r_data['job_dow'] if "job_dow" in r_data else None
-    job_sec = r_data['job_seconds'] if "job_seconds" in r_data else None
-    job_min = r_data['job_minutes'] if "job_minutes" in r_data else None
-    job_hrs = r_data['job_hours'] if "job_hours" in r_data else None
-    enddate = r_data['enddate'] if "enddate" in r_data else None
-
+    starttime = initializationTimeFormatter(starttime_ui)
+    endtime = initializationTimeFormatter(endtime_ui)
 
     # start date
     if diagnosticsID == 0 :
         return ("Diagnostic ID is required", status.HTTP_400_BAD_REQUEST)
     else:
         if jobtype == 'date':
+            
+            '''
+            Initialize variables for Date Job
+            '''
+
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
                     job = scheduler_helper.add_DateJob(starttime,diagnosticsID,correlationID)
@@ -166,7 +168,16 @@ def scheduleJob(data):
                 return (False,"Date field can't be empty for date jobs", status.HTTP_400_BAD_REQUEST)
 
         elif jobtype == 'interval':
-            # date when it starts, interval - secs, hours,minutes,date,day,weeks,startdate,enddate
+
+            
+            '''
+            Initialize variables for Cron Job
+            '''
+
+            intv_time = r_data['intv_time']
+            intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
+            intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
+
             if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
                     job = scheduler_helper.add_IntervalJob(
@@ -197,7 +208,18 @@ def scheduleJob(data):
             # return "job details: %s" % job
 
         elif jobtype == 'cron':
-            # hour,min,sec -> int // year,month,day,week,dayofweek
+            
+            '''
+            Initialize variables for Cron Job
+            '''
+
+            cron_date = r_data['date']
+            cron_time = r_data['time']
+            job_year,job_month,job_day = cronDateFormatter(cron_date)
+            job_hrs,job_min,job_sec = timeformatter(cron_time)
+            job_dow_ui = r_data['dow'] if "dow" in r_data else None
+            job_dow = job_dow_ui.lower()
+
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
                     job = scheduler_helper.add_CronJob(
@@ -245,18 +267,6 @@ def updateJob(data):
     endtime = r_data['endtime'] if "endtime" in r_data else None
     jobtype = r_data['jobtype'] if "jobtype" in r_data else None
     
-    ## INTERVAL JOB VARIABLES 
-    intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
-    intv_time = r_data['intv_time'] if "intv_time" in r_data else None
-    intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
-
-    ## Add format check for intv_time 
-
-    # intv_sec = int(r_data['intv_seconds']) if "intv_seconds" in r_data else 0
-    # intv_min = int(r_data['intv_minutes']) if "intv_minutes" in r_data else 0
-    # intv_hrs = int(r_data['intv_hours'])if "intv_hours" in r_data else 0
-    
-    
     ## CRONJOB VARIABLES
     # job_month, job_day, job_week, job_dow, job_seconds, job_minutes, job_hours
     job_month = r_data['job_month'] if "job_month" in r_data else None
@@ -286,6 +296,10 @@ def updateJob(data):
 
         elif jobtype == 'interval':
             # date when it starts, interval - secs, hours,minutes,date,day,weeks,startdate,enddate
+
+            intv_time = r_data['intv_time']
+            intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
+            intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
             
             if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
                 if scheduler_helper.get_job(str(diagnosticsID)) != None:
