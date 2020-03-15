@@ -23,8 +23,8 @@ from skeduler.settings import client as schedClient
 # }
 # Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
 scheduler = BackgroundScheduler(timezone = pytz.timezone('Asia/Calcutta'))
-# scheduler.add_jobstore(DjangoJobStore(), "default")
-scheduler.add_jobstore(MongoDBJobStore(client=schedClient),"default")
+scheduler.add_jobstore(DjangoJobStore(), "default")
+# scheduler.add_jobstore(MongoDBJobStore(client=schedClient),"default")
 
 
 def start_sched():
@@ -78,12 +78,12 @@ def remove_job(job_id):
     scheduler.remove_job(job_id)
 
 def sendRequest(diagID, correlationID):
-    # fetchRequest = diagnosticPack()
-    # command = fetchRequest.read(diagID)
-    # command = command['command']
+    fetchRequest = diagnosticPack()
+    command = fetchRequest.read(diagID)
+    command = json.dumps(command['command'])
     headers = {'Content-Type': 'application/json'}
     data_compiler = {
-        # "command": command,
+        "command": command,
         "correlationID": '',
         "diagnosticsid": diagID
     }
@@ -96,8 +96,8 @@ def sendRequest(diagID, correlationID):
         "state_id": random.randint(1,10000)
         #"counter_": "int" Incremental
     }'''
-    # url = 'http://mlapi2-svc/compiler?caller=scheduler'
-    # res = requests.post(url, headers=headers, data=data)
+    url = 'http://mlapi2-svc/compiler?caller=scheduler'
+    res = requests.post(url, headers=headers, data=data)
     #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
     print("Event fired", data)
 
