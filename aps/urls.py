@@ -23,7 +23,11 @@ urlpatterns = [
     path('schedule/packs',views.list_schedpack, name='list schedule packs')
 ]
 
-
+#Starting the scheduler 
 scheduler_helper.start_sched()
+
+'''
+Scheduler Logging 
+'''
 # import logging
 # logging.basicConfig(level="DEBUG")

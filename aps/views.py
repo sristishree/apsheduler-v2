@@ -134,7 +134,7 @@ class SchedulerTasks(APIView):
                 a.delete()
                 return JsonResponse({'success':"Job Deleted"}, status=200)
             except:
-                return JsonResponse({'error':"PK not present"})
+                return JsonResponse({'error':"PKK not present"})
         else:
             return JsonResponse({'error':"Job not found"}, status=400)
 

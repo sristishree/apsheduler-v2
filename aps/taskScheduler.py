@@ -5,19 +5,6 @@ from rest_framework import status
 import re
 from .schedulerPack import schedPack
 
-# DATEFORMAT - "2009-11-06 16:30:05"
-# Scheduler -> 
-#     Date Sched
-#         -> Date job inputs
-#               -> starttime*(str/datetime str), endtime(str/datetime str), id*(int)
-#     Interval Sched
-#         -> Interval job inputs
-#               -> starttime*(str/datetime str), endtime(str/datetime str), id*(int), intv_seconds(int), intv_hours(int), intv_minutes(int), intv_weeks(int)
-#     Cron Sched
-#         -> Cron job inputs
-#               -> starttime*(str/datetime str), endtime(str/datetime str), id*(int), job_month(str), job_day(str), job_week(str), job_dow(str), job_seconds(str), job_minutes(str), job_hours(str) 
-
-# sessionTimeout, API Versioning header based,
 
 '''curl -d '{
      "correlationID":"",
@@ -75,12 +62,9 @@ from .schedulerPack import schedPack
 # curl -d '{"diagnosticsid":"1"}' -H "Content-Type: application/json" -X POST localhost:8000/schedule/fetch
 
 
-
-
- 
-#     currentDT = datetime.datetime.now()
-#     print(diagID,"sendRequest()",currentDT.strftime("%Y-%m-%d %H:%M:%S") )
-
+### ====================== ###
+### BEGIN HELPER FUNCTIONS ###
+### ====================== ###
 
 def dateformatter(cur_date):
     date_time = {
@@ -110,63 +94,76 @@ def timeformatter(cur_time):
     else:
         return(None,None,None)
 
+def cronDateFormatter(cur_date):
+    targetDate = str(cur_date)
+    if re.match(r"^(\*{1}|\d{4})\-(\*|\d{2})\-(\*|\d{2})$",targetDate):
+        year,month,date= targetDate.split("-")
+        return (year,month,date)
+    else:
+        return(None,None,None)
+
+def initializationTimeFormatter(ui_time):
+    ct = str(ui_time)
+    time_format = ct.replace("T"," ")
+    return (time_format)
+
+
+### ======================= ###
+### END OF HELPER FUNCTIONS ###
+### ======================= ###    
+
 def scheduleJob(data):
     print("Processing request to scheduler ",data.data)
     r_data = data.data
     diagnosticsID = r_data['diagnosticsid'] if "diagnosticsid" in r_data else 0
     correlationID = r_data.get('correlationID')
-    starttime = r_data['starttime'] if "starttime" in r_data else None
-    endtime = r_data['endtime'] if "endtime" in r_data else None
+    starttime_ui = r_data['starttime'] if "starttime" in r_data else None
+    endtime_ui = r_data['endtime'] if "endtime" in r_data else None
     jobtype = r_data['jobtype'] if "jobtype" in r_data else None
-    
-    ## INTERVAL JOB VARIABLES 
-    intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
-    intv_time = r_data['intv_time'] if "intv_time" in r_data else None
-    intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
 
-    ## Add format check for intv_time 
+    starttime = initializationTimeFormatter(starttime_ui)
+    endtime = initializationTimeFormatter(endtime_ui)
 
-    # intv_sec = int(r_data['intv_seconds']) if "intv_seconds" in r_data else 0
-    # intv_min = int(r_data['intv_minutes']) if "intv_minutes" in r_data else 0
-    # intv_hrs = int(r_data['intv_hours'])if "intv_hours" in r_data else 0
-    
-    
-    ## CRONJOB VARIABLES
-    # job_month, job_day, job_week, job_dow, job_seconds, job_minutes, job_hours
-    job_month = r_data['job_month'] if "job_month" in r_data else None
-    job_day = r_data['job_day'] if "job_day" in r_data else None
-    job_week = r_data['job_week'] if "job_week" in r_data else None
-    job_year = r_data['job_year'] if "job_year" in r_data else None
-    job_dow = r_data['job_dow'] if "job_dow" in r_data else None
-    job_sec = r_data['job_seconds'] if "job_seconds" in r_data else None
-    job_min = r_data['job_minutes'] if "job_minutes" in r_data else None
-    job_hrs = r_data['job_hours'] if "job_hours" in r_data else None
-    enddate = r_data['enddate'] if "enddate" in r_data else None
-
-
-    # start date
     if diagnosticsID == 0 :
-        return ("Diagnostic ID is required", status.HTTP_400_BAD_REQUEST)
+        return (False, "Diagnostic ID is required", 400)
     else:
         if jobtype == 'date':
+            
+            '''
+            Initialize variables for Date Job
+            '''
+
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
                     job = scheduler_helper.add_DateJob(starttime,diagnosticsID,correlationID)
                     
+                    '''
+                    Create data for scheduler pack
+                    '''
+
                     pobj = schedPack()
                     pobj.create_schedPack(jobtype,
                             diagID=diagnosticsID,
                             starttime=starttime,
                             )
                     
-                    return (True,"Date job scheduled!", status.HTTP_201_CREATED)
+                    return (True,"Date job scheduled!",201)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
-                    return (False,"Job with Diagnostic ID already exists", status.HTTP_400_BAD_REQUEST )
+                    return (False,"Job with Diagnostic ID already exists",400 )
             elif starttime == None:
-                return (False,"Date field can't be empty for date jobs", status.HTTP_400_BAD_REQUEST)
+                return (False,"Date field can't be empty for date jobs", 400)
 
         elif jobtype == 'interval':
-            # date when it starts, interval - secs, hours,minutes,date,day,weeks,startdate,enddate
+
+            
+            '''
+            Initialize variables for Interval Job
+            '''
+
+            intv_time = r_data['intv_time']
+            intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
+            intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data and r_data['intv_weeks'] != "" else 0
+
             if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
                     job = scheduler_helper.add_IntervalJob(
@@ -176,6 +173,11 @@ def scheduleJob(data):
                                             intv_weeks,
                                             starttime,
                                             diagnosticsID,correlationID)
+
+                    '''
+                    Create data for scheduler pack
+                    '''
+
                     pobj = schedPack()
                     pobj.create_schedPack(jobtype,
                             diagID=diagnosticsID,
@@ -188,18 +190,34 @@ def scheduleJob(data):
 
                     return (True, "Interval job scheduled!", 201)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
-                    return (False, "Job with diagnostic ID already exists", status.HTTP_400_BAD_REQUEST)
+                    return (False, "Job with diagnostic ID already exists", 400)
             elif starttime == None:
-                return (False,"Startdate is required for scheduling!", status.HTTP_400_BAD_REQUEST)
+                return (False,"Startdate is required for scheduling!", 400)
             else:
-                return (False,"Error in scheduling job", status.HTTP_400_BAD_REQUEST)
+                return (False,"Error in scheduling job",400)
 
-            # return "job details: %s" % job
 
         elif jobtype == 'cron':
-            # hour,min,sec -> int // year,month,day,week,dayofweek
+            
+            '''
+            Initialize variables for Cron Job
+            '''
+
+            cron_date = r_data['date'] if 'date' in r_data else None 
+            cron_time = r_data['time'] if 'time' in r_data else None
+            job_year,job_month,job_day = cronDateFormatter(cron_date)
+            
+            job_hrs,job_min,job_sec = timeformatter(cron_time)
+            
+            job_week = r_data['job_week'] if "job_week" in r_data else None
+            
+            job_dow = r_data['dow'] if "dow" in r_data else None
+            if job_dow != None:
+                job_dow = job_dow.lower()[:3]
+
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
+
                     job = scheduler_helper.add_CronJob(
                                         job_year,
                                         job_month, 
@@ -210,10 +228,14 @@ def scheduleJob(data):
                                         job_min,
                                         job_sec,
                                         starttime,
-                                        enddate,
+                                        endtime,
                                         diagnosticsID,
                                         correlationID)
-                        
+
+                    '''
+                    Create data for scheduler pack
+                    '''
+
                     pobj = schedPack()
                     pobj.create_schedPack(jobtype,
                             diagID=diagnosticsID,
@@ -229,11 +251,11 @@ def scheduleJob(data):
                             endtime=enddate
                             )
 
-                    return (True,"Cron job scheduled!", status.HTTP_201_CREATED)
+                    return (True,"Cron job scheduled!", 201)
                 elif scheduler_helper.get_job(str(diagnosticsID)) != None:
-                    return (False,"Job with diagnostic ID already exists", status.HTTP_400_BAD_REQUEST)
+                    return (False,"Job with diagnostic ID already exists", 400)
             elif starttime == None:
-                return (False,"Specify a startdate", status.HTTP_400_BAD_REQUEST)
+                return (False,"Specify a startdate", 400)
 
 
 def updateJob(data):
@@ -244,18 +266,6 @@ def updateJob(data):
     starttime = r_data['starttime'] if "starttime" in r_data else None
     endtime = r_data['endtime'] if "endtime" in r_data else None
     jobtype = r_data['jobtype'] if "jobtype" in r_data else None
-    
-    ## INTERVAL JOB VARIABLES 
-    intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data else 0
-    intv_time = r_data['intv_time'] if "intv_time" in r_data else None
-    intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
-
-    ## Add format check for intv_time 
-
-    # intv_sec = int(r_data['intv_seconds']) if "intv_seconds" in r_data else 0
-    # intv_min = int(r_data['intv_minutes']) if "intv_minutes" in r_data else 0
-    # intv_hrs = int(r_data['intv_hours'])if "intv_hours" in r_data else 0
-    
     
     ## CRONJOB VARIABLES
     # job_month, job_day, job_week, job_dow, job_seconds, job_minutes, job_hours
@@ -270,22 +280,24 @@ def updateJob(data):
     enddate = r_data['enddate'] if "enddate" in r_data else None
 
 
-    # start date
     if diagnosticsID == 0 :
-        return ("Diagnostic ID is required", status.HTTP_400_BAD_REQUEST)
+        return ("Diagnostic ID is required",400)
     else:
         if jobtype == 'date':
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) != None:
                     job = scheduler_helper.update_DateJob(starttime,diagnosticsID,correlationID)
-                    return (True,"Date job rescheduled!", status.HTTP_201_CREATED)
+                    return (True,"Date job rescheduled!", 201)
                 elif scheduler_helper.get_job(str(diagnosticsID)) == None:
-                    return (False,"Job with Diagnostic ID does not exist", status.HTTP_400_BAD_REQUEST )
+                    return (False,"Job with Diagnostic ID does not exist", 400 )
             elif starttime == None:
-                return (False,"Date field can't be empty for date jobs", status.HTTP_400_BAD_REQUEST)
+                return (False,"Date field can't be empty for date jobs", 400)
 
         elif jobtype == 'interval':
-            # date when it starts, interval - secs, hours,minutes,date,day,weeks,startdate,enddate
+
+            intv_time = r_data['intv_time']
+            intv_hrs, intv_min, intv_sec = timeformatter(intv_time) 
+            intv_weeks = int(r_data['intv_weeks']) if "intv_weeks" in r_data and r_data['intv_weeks'] != "" else 0
             
             if starttime != None and intv_sec != None and intv_hrs != None and intv_min != None :
                 if scheduler_helper.get_job(str(diagnosticsID)) != None:
@@ -297,18 +309,16 @@ def updateJob(data):
                                             starttime,
                                             diagnosticsID)
                     
-                    return (True, "Interval job rescheduled!", status.HTTP_201_CREATED)
+                    return (True, "Interval job rescheduled!", 201)
                 elif scheduler_helper.get_job(str(diagnosticsID)) == None:
-                    return (False, "Job with diagnostic ID does not exist", status.HTTP_400_BAD_REQUEST)
+                    return (False, "Job with diagnostic ID does not exist", 400)
             elif starttime == None:
-                return (False,"Startdate is required for rescheduling!", status.HTTP_400_BAD_REQUEST)
+                return (False,"Startdate is required for rescheduling!", 400)
             else:
-                return (False,"Error in rescheduling job", status.HTTP_400_BAD_REQUEST)
+                return (False,"Error in rescheduling job", 400)
 
-            # return "job details: %s" % job
 
         elif jobtype == 'cron':
-            # hour,min,sec -> int // year,month,day,week,dayofweek
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) != None:
                     job = scheduler_helper.update_CronJob(
@@ -323,11 +333,11 @@ def updateJob(data):
                                         starttime,
                                         enddate,
                                         diagnosticsID)
-                    return (True,"Cron job rescheduled!", status.HTTP_201_CREATED)
+                    return (True,"Cron job rescheduled!", 201)
                 elif scheduler_helper.get_job(str(diagnosticsID)) == None:
-                    return (False,"Job with diagnostic ID does not exist", status.HTTP_400_BAD_REQUEST)
+                    return (False,"Job with diagnostic ID does not exist", 400)
             elif starttime == None:
-                return (False,"Specify a startdate", status.HTTP_400_BAD_REQUEST)
+                return (False,"Specify a startdate", 400)
 
 
  
