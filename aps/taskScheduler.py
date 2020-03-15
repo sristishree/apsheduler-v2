@@ -248,7 +248,7 @@ def scheduleJob(data):
                             day=job_day,
                             week=job_week,
                             day_of_week=job_dow,
-                            endtime=enddate
+                            endtime=endtime
                             )
 
                     return (True,"Cron job scheduled!", 201)

@@ -23,8 +23,8 @@ from skeduler.settings import client as schedClient
 # }
 # Create scheduler to run in a thread inside the application process settings.SCHEDULER_CONFIG {'apscheduler.timezone': 'Asia/Kolkata'}
 scheduler = BackgroundScheduler(timezone = pytz.timezone('Asia/Calcutta'))
-scheduler.add_jobstore(DjangoJobStore(), "default")
-# scheduler.add_jobstore(MongoDBJobStore(client=schedClient),"default")
+# scheduler.add_jobstore(DjangoJobStore(), "default")
+scheduler.add_jobstore(MongoDBJobStore(client=schedClient),"default")
 
 
 def start_sched():

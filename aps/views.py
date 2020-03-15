@@ -216,29 +216,29 @@ def sched_state(request):
             if scheduler_state != 1:
                 scheduler_helper.start_sched()
                 print("Scheduler Started")
-                return HttpResponse({'resp_obj':"STARTED", 'status': status.HTTP_200_OK})
+                return HttpResponse({"resp_obj":"STARTED"}, status=200)
                 #return HttpResponse("STARTED", status=status.HTTP_200_OK)
             else:
                 print("Scheduler already running")
-                return HttpResponse({'resp_obj':"Scheduler already running"})
+                return HttpResponse({"resp_obj":"Scheduler already running"})
         elif r_state == 'stop':
             if scheduler_state != 0:
                 sched_resp = scheduler_helper.shutdown_sched()
                 print(sched_resp)
                 if sched_resp == "STOPPED":
-                    return HttpResponse({'resp_obj':"STOPPED", 'status': status.HTTP_200_OK})
+                    return HttpResponse({'resp_obj':"STOPPED"}, status=200)
                     #return HttpResponse("STOPPED", status=status.HTTP_200_OK)
                 else:
-                    return HttpResponse({'resp_obj':"Error stopping scheduler", 'status':status.HTTP_400_BAD_REQUEST})
+                    return HttpResponse({'resp_obj':"Error stopping scheduler"}, status=400)
             else:
                 print("Scheduler not running")
                 return HttpResponse({'resp_obj':"Scheduler not running"})
         elif r_state == 'state':
             if scheduler_state == 1:
                 print("Scheduler Running")
-                return HttpResponse({'resp_obj':1, 'status':status.HTTP_200_OK})
+                return HttpResponse({'resp_obj':1}, status=200)
             else:
-                return HttpResponse({'resp_obj':0, 'status':status.HTTP_200_OK})
+                return HttpResponse({'resp_obj':0}, status=200)
         
 
 @api_view(['POST'])
