@@ -167,16 +167,16 @@ class SchedulerPacks(APIView):
                 return JsonResponse( packs, status=200, safe=False)
 
     def  delete(self, request, format=None):
-        if "id" in request.GET:
+        if "diagnosticsid" in request.data:
             schedRequest = getSchedulePack()
-            diagID = str(request.GET['id'])
+            diagID = str(request.data['diagnosticsid'])
             pack = schedRequest.delete_pack(diagID)
             if pack == None:
-                return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400)
+                return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400,safe = False)
             else:
-                return JsonResponse({'resp_obj': "Removed Schedule pack"}, status=200)
+                return JsonResponse({'resp_obj': "Removed Schedule pack"}, status=200, safe = False)
         else:
-            return JsonResponse({'ID for deletion not given'}, status=400)
+            return JsonResponse({'ID for deletion not given'}, status=400, safe = False)
         # return HttpResponse(schedules,status=200)
 
 

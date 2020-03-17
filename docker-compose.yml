@@ -3,7 +3,7 @@ version: "3.7"
 services:
   scheduler:
     build: .
-    command: python -u manage.py runserver 0.0.0.0:8002
+    command: bash -c "python manage.py migrate && python -u manage.py runserver 0.0.0.0:8002"
     volumes:
       - .:/app/
     ports:

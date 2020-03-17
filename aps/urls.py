@@ -20,7 +20,8 @@ urlpatterns = [
     path('schedule/write', views.write_data, name='write'),
     path('schedule/getpack',views.get_schedpack, name='get schedule pack'),
     path('schedule/removepack',views.delete_schedpack, name='list schedule packs'),
-    path('schedule/packs',views.list_schedpack, name='list schedule packs')
+    # path('schedule/packs',views.list_schedpack, name='list schedule packs')
+    path('schedule/packs',views.SchedulerPacks.as_view(), name='scheduler packs')
 ]
 
 #Starting the scheduler 

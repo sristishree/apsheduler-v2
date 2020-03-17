@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: schedulerv2
-        image: manjithd2/aps-scheduler
+        image: sristi/scheduler:v5
         ports:
         - containerPort: 8002
         imagePullPolicy: Always

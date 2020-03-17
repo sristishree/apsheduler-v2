@@ -79,13 +79,16 @@ def remove_job(job_id):
 
 def sendRequest(diagID, correlationID):
     fetchRequest = diagnosticPack()
-    command = fetchRequest.read(diagID)
-    command = json.dumps(command['command'])
+    command,name = fetchRequest.read(diagID)
+    command = json.dumps(command)
     headers = {'Content-Type': 'application/json'}
     data_compiler = {
         "command": command,
-        "correlationID": '',
-        "diagnosticsid": diagID
+        "tabName": name,
+        "correlationID": correlationID,
+        "diagnosticsid": diagID,
+        "diagnostics_flag": True,
+        "stateid": random.randint(1,10000000)
     }
 
     data = json.dumps(data_compiler)
@@ -112,7 +115,7 @@ def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID,
                                     hours = int(intv_hrs),
                                     weeks = intv_weeks,
                                     start_date=starttime,
-                                    id=str(diagID), args=[diagID,correlationid],jitter=30,
+                                    id=str(diagID), args=[diagID,correlationid],jitter=10,
                                     replace_existing=True)
 
 def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,endtime,diagID,correlationid):
@@ -127,7 +130,7 @@ def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job
                                         second=job_sec,
                                         start_date=starttime,
                                         end_date=endtime,
-                                        id=str(diagID), args=[diagID,correlationid],jitter=30,
+                                        id=str(diagID), args=[diagID,correlationid],jitter=10,
                                         replace_existing=True)
 
 

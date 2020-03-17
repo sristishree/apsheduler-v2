@@ -91,6 +91,11 @@ def timeformatter(cur_time):
         mins = targetTime[3:5]
         sec = targetTime[6:8]
         return (hrs,mins,sec)
+    elif re.match(r"\d\d:\d\d",targetTime):
+        hrs = targetTime[:2]
+        mins = targetTime[3:5]
+        sec = 00
+        return (hrs,mins,sec)
     else:
         return(None,None,None)
 
@@ -102,10 +107,23 @@ def cronDateFormatter(cur_date):
     else:
         return(None,None,None)
 
+def cronTimeFormatter(cur_time):
+    targetTime = str(cur_time)
+    if re.match(r"^(\*{1}|\d{2})\-(\*|\d{2})\-(\*|\d{2})$",targetTime):
+        hour,minutes,seconds= targetTime.split("-")
+        return (hour,minutes,seconds)
+    else:
+        return(None,None,None)
+
 def initializationTimeFormatter(ui_time):
     ct = str(ui_time)
     time_format = ct.replace("T"," ")
-    return (time_format)
+    if re.match(r"\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d",time_format):
+        return (time_format)
+    elif re.match(r"\d\d\d\d-\d\d-\d\d \d\d:\d\d",time_format):
+        sec = ':00'
+        time_format = time_format + sec
+        return (time_format)
 
 
 ### ======================= ###
@@ -207,11 +225,12 @@ def scheduleJob(data):
             cron_time = r_data['time'] if 'time' in r_data else None
             job_year,job_month,job_day = cronDateFormatter(cron_date)
             
-            job_hrs,job_min,job_sec = timeformatter(cron_time)
+            job_hrs,job_min,job_sec = cronTimeFormatter(cron_time)
             
             job_week = r_data['job_week'] if "job_week" in r_data else None
             
             job_dow = r_data['dow'] if "dow" in r_data else None
+            job_dow = None if r_data['dow']=='' else job_dow
             if job_dow != None:
                 job_dow = job_dow.lower()[:3]
 
