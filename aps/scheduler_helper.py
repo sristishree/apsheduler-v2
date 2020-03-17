@@ -77,7 +77,7 @@ def get_job(job_id):
 def remove_job(job_id):
     scheduler.remove_job(job_id)
 
-def sendRequest(diagID, correlationID):
+def sendRequest(diagID, correlationID, target):
     fetchRequest = diagnosticPack()
     command,name = fetchRequest.read(diagID)
     command = json.dumps(command)
@@ -88,7 +88,8 @@ def sendRequest(diagID, correlationID):
         "correlationID": correlationID,
         "diagnosticsid": diagID,
         "diagnostics_flag": True,
-        "stateid": random.randint(1,10000000)
+        "stateid": random.randint(1,10000000),
+        "target": target
     }
 
     data = json.dumps(data_compiler)
@@ -105,20 +106,20 @@ def sendRequest(diagID, correlationID):
     print("Event fired", data)
 
 
-def add_DateJob(starttime,diagID,correlationid):
-    scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID,correlationid], id=str(diagID), replace_existing=True)
+def add_DateJob(starttime,diagID,correlationid,target):
+    scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID,correlationid,target], id=str(diagID), replace_existing=True)
 
-def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID, correlationid):
+def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID, correlationid,target):
     scheduler.add_job(sendRequest,  trigger='interval',
                                     seconds=int(intv_sec),
                                     minutes=int(intv_min),
                                     hours = int(intv_hrs),
                                     weeks = intv_weeks,
                                     start_date=starttime,
-                                    id=str(diagID), args=[diagID,correlationid],jitter=10,
+                                    id=str(diagID), args=[diagID,correlationid,target],jitter=10,
                                     replace_existing=True)
 
-def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,endtime,diagID,correlationid):
+def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,endtime,diagID,correlationid,target):
      scheduler.add_job(sendRequest, trigger='cron',
                                         year=job_year,
                                         month=job_month, 
@@ -130,35 +131,8 @@ def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job
                                         second=job_sec,
                                         start_date=starttime,
                                         end_date=endtime,
-                                        id=str(diagID), args=[diagID,correlationid],jitter=10,
+                                        id=str(diagID), args=[diagID,correlationid,target],jitter=10,
                                         replace_existing=True)
-
-
-def update_DateJob(starttime, diagID, correlationID):
-    scheduler.reschedule_job(trigger='date',job_id=str(diagID),run_date=starttime)
-
-def update_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID):
-    scheduler.reschedule_job(trigger='interval',
-                            seconds=int(intv_sec),
-                            minutes=int(intv_min),
-                            hours = int(intv_hrs),
-                            weeks = intv_weeks,
-                            start_date=starttime,
-                            job_id=str(diagID))
-
-def update_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,endtime,diagID):
-    scheduler.reschedule_job(trigger='cron',
-                            year=job_year,
-                            month=job_month, 
-                            day=job_day, 
-                            week=job_week,
-                            day_of_week=job_dow,
-                            hour=job_hrs,
-                            minute=job_min,
-                            second=job_sec,
-                            start_date=starttime,
-                            end_date=endtime,
-                            job_id=str(diagID))
 
 
 def schedule_listener(event):

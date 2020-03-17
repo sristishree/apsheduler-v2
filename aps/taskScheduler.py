@@ -135,6 +135,7 @@ def scheduleJob(data):
     r_data = data.data
     diagnosticsID = r_data['diagnosticsid'] if "diagnosticsid" in r_data else 0
     correlationID = r_data.get('correlationID')
+    target = r_data['target'] if "target" in r_data else None
     starttime_ui = r_data['starttime'] if "starttime" in r_data else None
     endtime_ui = r_data['endtime'] if "endtime" in r_data else None
     jobtype = r_data['jobtype'] if "jobtype" in r_data else None
@@ -153,7 +154,7 @@ def scheduleJob(data):
 
             if starttime != None:
                 if scheduler_helper.get_job(str(diagnosticsID)) == None:
-                    job = scheduler_helper.add_DateJob(starttime,diagnosticsID,correlationID)
+                    job = scheduler_helper.add_DateJob(starttime,diagnosticsID,correlationID,target)
                     
                     '''
                     Create data for scheduler pack
@@ -190,7 +191,7 @@ def scheduleJob(data):
                                             intv_hrs,
                                             intv_weeks,
                                             starttime,
-                                            diagnosticsID,correlationID)
+                                            diagnosticsID,correlationID,target)
 
                     '''
                     Create data for scheduler pack
@@ -249,7 +250,7 @@ def scheduleJob(data):
                                         starttime,
                                         endtime,
                                         diagnosticsID,
-                                        correlationID)
+                                        correlationID, target)
 
                     '''
                     Create data for scheduler pack

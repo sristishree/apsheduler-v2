@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: schedulerv2
-        image: sristi/scheduler:v5
+        image: sristi/scheduler:v6
         ports:
         - containerPort: 8002
         imagePullPolicy: Always

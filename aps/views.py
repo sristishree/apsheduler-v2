@@ -90,10 +90,11 @@ class TaskAPIView(APIView):
             print("resp_obj:Job not found", "status:status.HTTP_400_BAD_REQUEST")
 
         
-        t = Thread(target = self.schedulerPost, args = [request.data])
+        t = Thread(target = self.schedulerPost, args = [request])
         t.daemon = True
         t.start()
         t.join()
+        return JsonResponse({"scheduler":"Data sent for rescheduling to scheduler"}, status=202, safe=True)
 
         
 
