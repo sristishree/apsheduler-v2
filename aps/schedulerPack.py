@@ -22,15 +22,23 @@ class schedPack():
                     month=None,
                     day=None,
                     day_of_week=None,
-                    week=None):
+                    week=None,
+                    request=None,
+                    schedID=None,
+                    schedName=None):
 
         if jobtype == 'date':
             r_data = {
+                'schedulerID': schedID,
+                'schedulerName': schedName,
                 'diagnosticsid' : diagID,
                 'jobtype': jobtype,
                 'schedData': [{
                     'starttime':starttime
-                }] 
+                }],
+                'uiData': [
+                    request
+                ] 
             }
             # schedObj = schedulerCollection(r_data)
             # resp = schedObj.create()
@@ -40,9 +48,12 @@ class schedPack():
             new_class_collection = self.collection.find_one({'_id' : class_collection_id})
 
             output = {
+                    'schedulerID' : new_class_collection['schedulerID'],
+                    'schedulerName' : new_class_collection['schedulerName'],
                     'diagnosticsid' : new_class_collection['diagnosticsid'],
                     'jobtype': new_class_collection['jobtype'],
-                    'schedData': new_class_collection['schedData']
+                    'schedData': new_class_collection['schedData'],
+                    'uiData': new_class_collection['uiData']
                 }
 
             return output
@@ -50,14 +61,20 @@ class schedPack():
 
         elif jobtype == 'interval':
             r_data = {
+                'schedulerID': schedID,
+                'schedulerName': schedName,
                 'diagnosticsid' : diagID,
                 'jobtype': jobtype,
                 'schedData': [{
                     'intv_sec':seconds,
                     'intv_min':minutes,
                     'intv_hrs':hours,
-                    'intv_weeks':weeks
-                }] 
+                    'intv_weeks':weeks,
+                    'intv_days':day
+                }],
+                'uiData': [
+                    request
+                ] 
             }
             # schedObj = schedulerCollection(r_data)
             # resp = schedObj.create()
@@ -67,9 +84,13 @@ class schedPack():
             new_class_collection = self.collection.find_one({'_id' : class_collection_id})
 
             output = {
+                    'schedulerID' : new_class_collection['schedulerID'],
+                    'schedulerName' : new_class_collection['schedulerName'],
                     'diagnosticsid' : new_class_collection['diagnosticsid'],
                     'jobtype': new_class_collection['jobtype'],
-                    'schedData': new_class_collection['schedData']
+                    'schedData': new_class_collection['schedData'],
+                    'uiData': new_class_collection['uiData']
+
                 }
 
             return output
@@ -78,6 +99,8 @@ class schedPack():
 
         elif jobtype == 'cron':
             r_data = {
+                'schedulerID': schedID,
+                'schedulerName': schedName,
                 'diagnosticsid' : diagID,
                 'jobtype': jobtype,
                 'schedData': [{
@@ -89,7 +112,10 @@ class schedPack():
                     'job_hrs':hours,
                     'job_min':minutes,
                     'job_sec':seconds
-                }] 
+                }],
+                'uiData': [
+                    request
+                ]  
             }
             
             class_collection_id = self.collection.insert(r_data)
@@ -97,9 +123,13 @@ class schedPack():
             new_class_collection = self.collection.find_one({'_id' : class_collection_id})
 
             output = {
+                    'schedulerID' : new_class_collection['schedulerID'],
+                    'schedulerName' : new_class_collection['schedulerName'],
                     'diagnosticsid' : new_class_collection['diagnosticsid'],
                     'jobtype': new_class_collection['jobtype'],
-                    'schedData': new_class_collection['schedData']
+                    'schedData': new_class_collection['schedData'],
+                    'uiData': new_class_collection['uiData']
+
                 }
 
             return output

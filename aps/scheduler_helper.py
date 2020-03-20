@@ -3,6 +3,7 @@ import random
 import requests
 import pytz
 import json
+from datetime import datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.mongodb import MongoDBJobStore
@@ -39,8 +40,8 @@ def start_sched():
     # - Add a scheduled job to the job store on application initialization
     # - The job will execute a model class method at midnight each day
     # - replace_existing in combination with the unique ID prevents duplicate copies of the job
-    # scheduler.add_job("core.models.MyModel.my_class_method", "cron", id="my_class_method", hour=0, replace_existing=True)
 
+    # scheduler.add_job("core.models.MyModel.my_class_method", "cron", id="my_class_method", hour=0, replace_existing=True)
     # Add the scheduled jobs to the Django admin interface
     # register_events(scheduler)
     print("yyyyyyyyyy")
@@ -73,54 +74,111 @@ def get_job(job_id):
         return None
     else:
         return False
-    
+
+def printjobs():
+    print(scheduler.print_jobs())
+    return scheduler.print_jobs()
+
 def remove_job(job_id):
     scheduler.remove_job(job_id)
 
-def sendRequest(diagID, correlationID, target):
-    fetchRequest = diagnosticPack()
-    command,name = fetchRequest.read(diagID)
-    command = json.dumps(command)
+def remove_all_jobs():
+    jobs = scheduler.get_jobs()
+    for job in jobs:
+        try:
+            a = tasks.objects.get(schedulerName=str(job.id))
+            a.delete()
+        except:
+            return 400
+    scheduler.remove_all_jobs()
+    return 200
+    
+
+def convertYaml(command,ip,target):
+    data = {
+        "yaml_object": command,
+        "host": ip,
+        "os": target,
+        "execute": "no"
+    }
+    data = json.dumps(data)
     headers = {'Content-Type': 'application/json'}
+    url = 'http://20.44.41.89/'
+    res = requests.post(url, headers=headers,data=data)
+    res = res.json()
+    return res
+
+def sendRequest(diagID, correlationID, schedName, schedulerID, target, ip, endtime, command, name):
+    headers = {'Content-Type': 'application/json'}
+
+    format = "%Y-%m-%d %H:%M:%S %Z%z"
+    now_utc = datetime.now(pytz.timezone('UTC'))
+    print(now_utc.strftime(format))
+    now_asia = now_utc.astimezone(pytz.timezone('Asia/Kolkata'))
+    timestamp = now_asia.strftime(format)
+
     data_compiler = {
         "command": command,
         "tabName": name,
+        "schedulerName": schedName,
+        "schedulerID": schedulerID,
         "correlationID": correlationID,
         "diagnosticsid": diagID,
         "diagnostics_flag": True,
         "stateid": random.randint(1,10000000),
-        "target": target
+        "target_env": target,
+        "host": ip,
+        "end_time": endtime,
+        "timestamp": timestamp
     }
 
     data = json.dumps(data_compiler)
-    '''
-    data = { 
-        "diagnosticsid" : diagID,
-        "diagnostic_flag" : "True",
-        "state_id": random.randint(1,10000)
-        #"counter_": "int" Incremental
-    }'''
+    
     url = 'http://mlapi2-svc/compiler?caller=scheduler'
     res = requests.post(url, headers=headers, data=data)
     #scheduler_event(callback, arguments=[], MASK= EVENTS_ALL)
     print("Event fired", data)
 
 
-def add_DateJob(starttime,diagID,correlationid,target):
-    scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID,correlationid,target], id=str(diagID), replace_existing=True)
+def add_DateJob(starttime,diagID,correlationid, schedName, schedulerID,target,ip,endtime=None):
+    fetchRequest = diagnosticPack()
+    command,name = fetchRequest.read(diagID)
+    command = json.dumps(command)
+    if target in {'windows','linux','windowshost','linuxhost'}:
+        res = convertYaml(command,ip,target)
+        command = res
+    scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID,correlationid,schedName,schedulerID,target,ip,command,name], id=str(schedName), replace_existing=True)
 
-def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, starttime, diagID, correlationid,target):
+def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, intv_days, starttime, endtime, diagID, correlationid,schedName, schedulerID, target,ip):
+    fetchRequest = diagnosticPack()
+    command,name = fetchRequest.read(diagID)
+    command = json.dumps(command)
+    if target in {'windows','linux','windowshost','linuxhost'}:
+        print(target,"TTTTTTT")
+        res = convertYaml(command,ip,target)
+        command = res
     scheduler.add_job(sendRequest,  trigger='interval',
                                     seconds=int(intv_sec),
                                     minutes=int(intv_min),
                                     hours = int(intv_hrs),
                                     weeks = intv_weeks,
+                                    days = intv_days,
                                     start_date=starttime,
-                                    id=str(diagID), args=[diagID,correlationid,target],jitter=10,
+                                    end_date = endtime,
+                                    id=str(schedName), 
+
+                                    args=[diagID,correlationid,schedName,schedulerID,target,ip,endtime,command,name],
+                                    jitter=10,
                                     replace_existing=True)
 
-def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,endtime,diagID,correlationid,target):
-     scheduler.add_job(sendRequest, trigger='cron',
+def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job_sec,starttime,endtime,diagID,correlationid,schedName,schedulerID,target,ip):
+    fetchRequest = diagnosticPack()
+    command,name = fetchRequest.read(diagID)
+    command = json.dumps(command)
+    if target in {'windows','linux','windowshost','linuxhost'}:
+        res = convertYaml(command,ip,target)
+        command = res
+    scheduler.add_job(sendRequest, trigger='cron',
                                         year=job_year,
                                         month=job_month, 
                                         day=job_day, 
@@ -131,7 +189,7 @@ def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job
                                         second=job_sec,
                                         start_date=starttime,
                                         end_date=endtime,
-                                        id=str(diagID), args=[diagID,correlationid,target],jitter=10,
+                                        id=str(schedName), args=[diagID,correlationid,schedName,schedulerID,target,ip,endtime,command,name],jitter=10,
                                         replace_existing=True)
 
 

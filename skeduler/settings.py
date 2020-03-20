@@ -39,7 +39,7 @@ SECRET_KEY = 'oy)8b*)op*m&$%$_($bt0zolt9f2sj@biy5l2t0$r3wdex3i63'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['20.44.34.129','mlapi2-svc','20.44.32.188','scheduler-svc','52.140.9.34','52.140.9.34:8002','localhost']
+ALLOWED_HOSTS = ['20.44.36.251','20.44.34.129','mlapi2-svc','20.44.32.188','scheduler-svc','52.140.9.34','52.140.9.34:8002','localhost']
 
 
 # Application definition

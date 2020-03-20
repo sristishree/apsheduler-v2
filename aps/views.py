@@ -15,6 +15,7 @@ from django.http import HttpResponse
 from threading import Thread
 from .createData import createData
 from .getSchedPack import getSchedulePack
+import uuid
 
 
 
@@ -29,31 +30,64 @@ class TaskAPIView(APIView):
     def schedulerPost(self, data):
         # print(data)
         serializer = TaskSerializer(data=data.data)
-        # print(serializer.is_valid)
-        if serializer.is_valid():
-            resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(data)
-            print (resp_success,resp_obj)
+        try:
 
-            if resp_success:
-                serializer.save()
-            
-            print(type(resp_obj),resp_obj)
-            return JsonResponse(resp_obj, status=resp_status,safe=False)
-            #return HttpResponse(resp_obj, status=resp_status)
-        else:
-            print(serializer.is_valid(),"Serializer Errors",serializer.errors)
-            return HttpResponse({'error':serializer.errors}, status=400)
-            #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(data)
+                print (resp_success,resp_obj)
+
+                if resp_success:
+                    serializer.save()
+                
+                print("sss",type(resp_obj),resp_obj)
+                return JsonResponse(resp_obj, status=resp_status,safe=False)
+                #return HttpResponse(resp_obj, status=resp_status)
+            else:
+                a = tasks.objects.get(pk=data.data['diagnosticsid'])
+                print("YYYY",a)
+                print(serializer.is_valid(),"Serializer Errors",serializer.errors)
+                return HttpResponse({'error':serializer.errors}, status=400)
+        except:
+            if serializer.is_valid():
+                resp_success,resp_obj, resp_status = taskScheduler.scheduleJob(data)
+
+                if resp_success:
+                    serializer.save()
+                
+                print("sss",type(resp_obj),resp_obj)
+                return JsonResponse(resp_obj, status=resp_status,safe=False)
+
 
     
     def post(self, request, format=None):
         print(type(request.data))
-        t = Thread(target = self.schedulerPost, args = [request])
-        t.daemon = False
-        t.start()
-        t.join()
-        return JsonResponse({"scheduler":"Data sent to scheduler"}, status=202, safe=True)
-    
+        
+        schedID = 'sched_'+uuid.uuid4().hex[:10]
+        # ser_data = request.data
+        # ser_data['schedulerID'] = schedID
+        request.data['schedulerID'] = schedID
+        print("SSSSS",request)
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            # check with diagID if same entry already present
+            # a = tasks.objects.get(pk=request.data['diagnosticsid'])
+            # Check UI data with schedpack ui data
+            schedRequest = getSchedulePack()
+            checkExsists = schedRequest.checkSchedPackExists(request.data)
+            print("XXXXXX",checkExsists)
+            if checkExsists:
+                return JsonResponse({"scheduler":"Similar schedule exists"}, status=400, safe=True)
+            else:
+                t = Thread(target = self.schedulerPost, args = [request])
+                t.daemon = False
+                t.start()
+                t.join()
+                return JsonResponse({"scheduler":"Data sent to scheduler"}, status=202, safe=True)
+        else:
+           
+            print(serializer.is_valid(),"Serializer Errors: ",serializer.errors)
+            return JsonResponse({'error':serializer.errors}, status=400,safe=False)
+        # return res
     '''
     def put(self, request, pk=None, format=None):
         pk = request.data['diagnosticsid']
@@ -127,25 +161,44 @@ class SchedulerTasks(APIView):
             return JsonResponse(schedules, status=200, safe=False)
 
     def  delete(self, request, format=None):
-        r_jobid = str(request.data['diagnosticsid'])
-        if scheduler_helper.job_exists(r_jobid):
-            try:
-                a = tasks.objects.get(pk=str(request.data['diagnosticsid']))
-                scheduler_helper.remove_job(r_jobid)
-                a.delete()
-                return JsonResponse({'success':"Job Deleted"}, status=200)
-            except:
-                return JsonResponse({'error':"PKK not present"})
+        if "schedulerName" not in request.data:
+            return JsonResponse({'Scheduler Names for deletion not given'}, status=400, safe = False)
+        schedRequest = getSchedulePack()
+        jobid_list = (request.data['schedulerName'])
+        if str(jobid_list[0])== 'all':
+            stat = schedRequest.delete_all_packs()
+            status = scheduler_helper.remove_all_jobs()
+            if status==200:
+                return JsonResponse({'success':"All jobs deleted"}, status=200)
+            elif status==400:
+                return JsonResponse({'error':"All jobs not deleted"}, status=400)
+        responses = []
+        for r_jobid in jobid_list:
+            
+            if scheduler_helper.job_exists(r_jobid):
+                try:
+                    a = tasks.objects.get(schedulerName=str(r_jobid))
+                    print("Object to be deleted",a)
+                    
+                    if pack!=None:
+                        pack = schedRequest.delete_pack(r_jobid)
+                    scheduler_helper.remove_job(r_jobid)
+                    a.delete()
+                    
+                except:
+                    responses.append(r_jobid)
+            else:
+                responses.append(r_jobid)
+        if len(responses)==0:
+            return JsonResponse({'success':"Job Deleted"}, status=200)
         else:
-            return JsonResponse({'error':"Job not found"}, status=400)
-
-        # return HttpResponse(schedules,status=200)
+            return JsonResponse({'error':"Jobs not found","jobs":responses}, status=400)
 
 
 class SchedulerPacks(APIView):
     
     '''
-    Class to get and delete tasks
+    Class to get and delete packs
     '''
 
     def get(self, request, format=None):
@@ -168,17 +221,27 @@ class SchedulerPacks(APIView):
                 return JsonResponse( packs, status=200, safe=False)
 
     def  delete(self, request, format=None):
-        if "diagnosticsid" in request.data:
-            schedRequest = getSchedulePack()
-            diagID = str(request.data['diagnosticsid'])
-            pack = schedRequest.delete_pack(diagID)
+        if "schedulerName" not in request.data:
+            return JsonResponse({'Scheduler Names for deletion not given'}, status=400, safe = False)
+        schedRequest = getSchedulePack()
+        jobid_list = (request.data['schedulerName'])
+        if str(jobid_list[0])== 'all':
+            status = schedRequest.delete_all_packs()
+            return JsonResponse({'success':"All jobs deleted"}, status=200)
+            
+        responses = []
+        for r_jobid in jobid_list:
+            r_jobid = str(r_jobid)
+            pack = schedRequest.delete_pack(r_jobid)
             if pack == None:
-                return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400,safe = False)
+                pass
             else:
-                return JsonResponse({'resp_obj': "Removed Schedule pack"}, status=200, safe = False)
+                responses.append(r_jobid)
+        if len(responses)==0:
+            return JsonResponse({'resp_obj': 'Schedule Pack not found'}, status=400,safe = False)
         else:
-            return JsonResponse({'ID for deletion not given'}, status=400, safe = False)
-        # return HttpResponse(schedules,status=200)
+            return JsonResponse({'resp_obj': "Removed Schedule pack","jobs":responses}, status=400,safe=False)
+        
 
 
 

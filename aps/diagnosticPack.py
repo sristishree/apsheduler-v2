@@ -11,7 +11,7 @@ class diagnosticPack():
         yaml = ruamel.yaml.YAML(typ='safe')
         camlData = yaml.load(data['camlCode'])
         tabName = yaml.load(data['tabName'])
-        print(camlData,"DATA FROM DIAG PACK",data)
+        #print(camlData,"DATA FROM DIAG PACK",data)
         #if data:
         return (camlData,tabName)
         

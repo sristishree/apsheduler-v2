@@ -6,11 +6,11 @@ from mongoengine import Document, EmbeddedDocument, fields
 
 # Create your models here.
 class tasks(models.Model):
-    diagnosticsid = models.CharField(max_length=100,primary_key=True)
+    schedulerID = models.CharField(max_length=100,primary_key=True)
+    schedulerName = models.CharField(max_length=100,unique=True)
+    diagnosticsid = models.CharField(max_length=100)
     correlationID = models.CharField(max_length=100,blank=True)
-    starttime = models.CharField(max_length=100)
     jobtype = models.CharField(max_length=30)
-    lookup_id = models.UUIDField(default=uuid.uuid4, editable=False)
     job_runs = models.IntegerField(default=0)
     job_success = models.IntegerField(default=0)
     #interval = models.CharField(max_length=30,blank=True) 
@@ -19,7 +19,7 @@ class tasks(models.Model):
     # Incr -> Increments everytime successful & No change on fail    
 
 def __str__(self):
-        return self.coid
+        return self.schedulerName
 
 
 
@@ -140,6 +140,3 @@ class schedulerCollection(MongoConnectionWorkbook):
 
 
         # class_collection_id = self.collection.insert(self.args)
-
-        
-        
