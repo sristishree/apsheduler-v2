@@ -25,7 +25,7 @@ urlpatterns = [
 ]
 
 #Starting the scheduler 
-#scheduler_helper.start_sched()
+scheduler_helper.start_sched()
 
 '''
 Scheduler Logging 

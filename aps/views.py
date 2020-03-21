@@ -179,9 +179,7 @@ class SchedulerTasks(APIView):
                 try:
                     a = tasks.objects.get(schedulerName=str(r_jobid))
                     print("Object to be deleted",a)
-                    
-                    if pack!=None:
-                        pack = schedRequest.delete_pack(r_jobid)
+                    pack = schedRequest.delete_pack(r_jobid)
                     scheduler_helper.remove_job(r_jobid)
                     a.delete()
                     
@@ -227,7 +225,7 @@ class SchedulerPacks(APIView):
         jobid_list = (request.data['schedulerName'])
         if str(jobid_list[0])== 'all':
             status = schedRequest.delete_all_packs()
-            return JsonResponse({'success':"All jobs deleted"}, status=200)
+            return JsonResponse({'success':"All packs deleted"}, status=200)
             
         responses = []
         for r_jobid in jobid_list:

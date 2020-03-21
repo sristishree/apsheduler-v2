@@ -38,6 +38,7 @@ class getSchedulePack():
     
     def delete_pack(self, schedName):
         pack = self.collection.find_one({'schedulerName': schedName})
+        
         if pack != None:
             delete_pack = self.collection.remove({'schedulerName': schedName})
             return ("Successfully removed")
