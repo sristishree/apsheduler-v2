@@ -66,7 +66,6 @@ class TaskAPIView(APIView):
         # ser_data = request.data
         # ser_data['schedulerID'] = schedID
         request.data['schedulerID'] = schedID
-        print("SSSSS",request)
         serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
             # check with diagID if same entry already present
@@ -74,7 +73,6 @@ class TaskAPIView(APIView):
             # Check UI data with schedpack ui data
             schedRequest = getSchedulePack()
             checkExsists = schedRequest.checkSchedPackExists(request.data)
-            print("XXXXXX",checkExsists)
             if checkExsists:
                 return JsonResponse({"scheduler":"Similar schedule exists"}, status=400, safe=True)
             else:
@@ -88,29 +86,7 @@ class TaskAPIView(APIView):
             print(serializer.is_valid(),"Serializer Errors: ",serializer.errors)
             return JsonResponse({'error':serializer.errors}, status=400,safe=False)
         # return res
-    '''
-    def put(self, request, pk=None, format=None):
-        pk = request.data['diagnosticsid']
-        pk = str(pk)
-        if scheduler_helper.job_exists(pk):
-            try:
-                user = tasks.objects.get(pk=pk)
-            except:
-                return HttpResponse({'error':"PK not present"})
-                #return HttpResponse("PK not present")
-            serializer = TaskSerializer(user, data = request.data)
-            if serializer.is_valid():
-                resp_success, resp_obj, resp_status = taskScheduler.updateJob(request)
-                serializer.save()
-                return HttpResponse({'resp_obj': resp_obj, 'status':resp_status})
-                #return HttpResponse(resp_obj, status=resp_status)
-            else:
-                print(serializer.is_valid())
-                return HttpResponse({'error':serializer.errors,'status':status.HTTP_400_BAD_REQUEST})
-                #return HttpResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return HttpResponse({'resp_obj':"Job not found", 'status':status.HTTP_400_BAD_REQUEST})
-    '''
+
     def put(self, request, pk=None, format=None):
         r_jobid = str(request.data['diagnosticsid'])
         if scheduler_helper.job_exists(r_jobid):
@@ -143,11 +119,17 @@ class SchedulerTasks(APIView):
         if "id" in request.GET:
             print(type(request.GET['id']), request.GET['id'])
             schedules=[]
-            scl = scheduler_helper.listjobs(request.GET['id'])
-            jobdict = {
-                'diagnosticsid' : scl.args[0],
-                'next_run' : scl.next_run_time,
-            }
+            job = scheduler_helper.listjobs(request.GET['id'])
+            
+            jobdict = {}
+            
+            jobdict['Scheduler Name'] = job.args[2]
+            jobdict['next_run'] = job.next_run_time
+            jobdict['Diagnostics ID'] = job.args[0]
+            jobdict['Correlation ID'] = job.args[1]
+            jobdict['Scheduler ID'] = job.args[3]
+            jobdict['Target'] = job.args[4]
+
             schedules.append(jobdict)
             return JsonResponse(schedules, status=200, safe=False)
         else:
@@ -155,8 +137,13 @@ class SchedulerTasks(APIView):
             scl = scheduler_helper.listjobs()
             for job in scl:
                 jobdict = {}
+                jobdict['Scheduler Name'] = job.args[2]
                 jobdict['next_run'] = job.next_run_time
-                jobdict['diagnosticsid'] = job.args
+                jobdict['Diagnostics ID'] = job.args[0]
+                jobdict['Correlation ID'] = job.args[1]
+                jobdict['Scheduler ID'] = job.args[3]
+                jobdict['Target'] = job.args[4]
+                # jobdict['Arguments'] = job.args
                 schedules.append(jobdict)
             return JsonResponse(schedules, status=200, safe=False)
 
@@ -180,6 +167,9 @@ class SchedulerTasks(APIView):
                     a = tasks.objects.get(schedulerName=str(r_jobid))
                     print("Object to be deleted",a)
                     pack = schedRequest.delete_pack(r_jobid)
+                    if pack!=None:
+                        print("HERE")
+                        pack = schedRequest.delete_pack(r_jobid)
                     scheduler_helper.remove_job(r_jobid)
                     a.delete()
                     

@@ -103,15 +103,16 @@ def convertYaml(command,ip,target):
     }
     data = json.dumps(data)
     headers = {'Content-Type': 'application/json'}
-    url = 'http://20.44.41.89/'
+    url = 'http://20.44.41.89/remote'
     res = requests.post(url, headers=headers,data=data)
     res = res.json()
-    return res
+    return json.dumps(res)
 
 def sendRequest(diagID, correlationID, schedName, schedulerID, target, ip, endtime, command, name):
     headers = {'Content-Type': 'application/json'}
 
-    format = "%Y-%m-%d %H:%M:%S %Z%z"
+    format = "%Y-%m-%d %H:%M:%S"
+    timezone =  "%Z%z"
     now_utc = datetime.now(pytz.timezone('UTC'))
     print(now_utc.strftime(format))
     now_asia = now_utc.astimezone(pytz.timezone('Asia/Kolkata'))
@@ -147,6 +148,8 @@ def add_DateJob(starttime,diagID,correlationid, schedName, schedulerID,target,ip
     if target in {'windows','linux','windowshost','linuxhost'}:
         res = convertYaml(command,ip,target)
         command = res
+    else:
+        ip = None
     scheduler.add_job(sendRequest, trigger='date', run_date=starttime,args=[diagID,correlationid,schedName,schedulerID,target,ip,command,name], id=str(schedName), replace_existing=True)
 
 def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, intv_days, starttime, endtime, diagID, correlationid,schedName, schedulerID, target,ip):
@@ -154,9 +157,10 @@ def add_IntervalJob(intv_sec, intv_min, intv_hrs, intv_weeks, intv_days, startti
     command,name = fetchRequest.read(diagID)
     command = json.dumps(command)
     if target in {'windows','linux','windowshost','linuxhost'}:
-        print(target,"TTTTTTT")
         res = convertYaml(command,ip,target)
         command = res
+    else:
+        ip = None
     scheduler.add_job(sendRequest,  trigger='interval',
                                     seconds=int(intv_sec),
                                     minutes=int(intv_min),
@@ -178,6 +182,8 @@ def add_CronJob( job_year,job_month,job_day,job_week,job_dow,job_hrs,job_min,job
     if target in {'windows','linux','windowshost','linuxhost'}:
         res = convertYaml(command,ip,target)
         command = res
+    else:
+        ip = None
     scheduler.add_job(sendRequest, trigger='cron',
                                         year=job_year,
                                         month=job_month, 

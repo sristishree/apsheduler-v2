@@ -1,5 +1,6 @@
 from skeduler.settings import client
 import ruamel.yaml
+import json
 #db, name
 class diagnosticPack():
     def __init__(self):
@@ -11,7 +12,7 @@ class diagnosticPack():
         yaml = ruamel.yaml.YAML(typ='safe')
         camlData = yaml.load(data['camlCode'])
         tabName = yaml.load(data['tabName'])
-        #print(camlData,"DATA FROM DIAG PACK",data)
+        print(camlData[0],"DATA FROM DIAG PACK",data)
         #if data:
-        return (camlData,tabName)
-        
+        #return (json.dumps(camlData),tabName)
+        return(camlData,tabName)

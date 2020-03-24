@@ -116,8 +116,8 @@ def cronDateFormatter(cur_date):
 
 def cronTimeFormatter(cur_time):
     targetTime = str(cur_time)
-    if re.match(r"^(\*{1}|\d{2})\-(\*|\d{2})\-(\*|\d{2})$",targetTime):
-        hour,minutes,seconds= targetTime.split("-")
+    if re.match(r"^(\*{1}|\d{2})\:(\*|\d{2})\:(\*|\d{2})$",targetTime):
+        hour,minutes,seconds= targetTime.split(":")
         return (hour,minutes,seconds)
     else:
         return(None,None,None)

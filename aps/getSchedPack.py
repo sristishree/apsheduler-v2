@@ -5,16 +5,19 @@ class getSchedulePack():
         self.db = client['scheduler_packs']
         self.collection = self.db['schedPacks']
     
-    def read(self,diagnosticsid):
-        pack = self.collection.find_one({'diagnosticsid': diagnosticsid})
+    def read(self,schedName):
+        pack = self.collection.find_one({'schedulerName': schedName})
         allPacks = []
 
         if pack != None:
                 
             p = {
+                    'schedulerId' : pack['schedulerID'],
+                    'schedulerName' : pack['schedulerName'],
                     'diagnosticsid' : pack['diagnosticsid'],
                     'jobtype' : pack['jobtype'],
-                    'schedData' : pack['schedData']
+                    'schedData' : pack['schedData'],
+                    'uiData': pack['uiData']
                 }
             
             allPacks.append(p)
@@ -28,9 +31,12 @@ class getSchedulePack():
         allPacks = []
         for pack in packs:
             p = {
-                'diagnosticsid' : pack['diagnosticsid'],
-                'jobtype' : pack['jobtype'],
-                'schedData' : pack['schedData']
+                    'schedulerId' : pack['schedulerID'],
+                    'schedulerName' : pack['schedulerName'],
+                    'diagnosticsid' : pack['diagnosticsid'],
+                    'jobtype' : pack['jobtype'],
+                    'schedData' : pack['schedData'],
+                    'uiData': pack['uiData']
             }
             allPacks.append(p)
         print('allPacks',allPacks)
@@ -38,7 +44,6 @@ class getSchedulePack():
     
     def delete_pack(self, schedName):
         pack = self.collection.find_one({'schedulerName': schedName})
-        
         if pack != None:
             delete_pack = self.collection.remove({'schedulerName': schedName})
             return ("Successfully removed")
@@ -48,15 +53,16 @@ class getSchedulePack():
     def delete_all_packs(self):
         packs = self.collection.find()
         for pack in packs:
+            print("DELETION",pack)
             delete_pack = self.collection.remove({'schedulerName': pack['schedulerName']})
         return("Successfully removed all packs")
-
+   
     def checkSchedPackExists(self, uiData):
         in_diagID = uiData['diagnosticsid']
         packs = self.collection.find({'uiData.diagnosticsid': in_diagID}, {'uiData': []})
         for pack in packs:
             s_pack = pack['uiData'][0]
-            if s_pack['jobtype'] == uiData['jobtype'] and s_pack['diagnosticsid'] == uiData['diagnosticsid'] and s_pack['target'] == uiData['target']:
+            if s_pack['jobtype'] == uiData['jobtype'] and s_pack['diagnosticsid'] == uiData['diagnosticsid'] and s_pack['target']['target_env'] == uiData['target']['target_env'] and s_pack['target']['host'] == uiData['target']['host']:
                 if s_pack['starttime'] == uiData['starttime']:
                     if uiData['jobtype'] == 'date':
                         if s_pack['starttime'] == uiData['starttime'] and s_pack['endtime'] == uiData['endtime']:
